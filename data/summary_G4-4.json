@@ -1,0 +1,64 @@
+{
+  "id": "G4-4",
+  "name": "직교 제약 검증",
+  "desc": "서로 독립적인 다중 제약 조건을 동시에 만족시키는 정밀 수행 능력 학습 데이터",
+  "status": "wait",
+  "info": {
+    "tier": 2,
+    "target": 3500,
+    "minimum": 1000,
+    "lang_ratio": "EN:KO = 5:5",
+    "cot_ratio": "think 50% / no_think 50%"
+  },
+  "seeds": [
+    {
+      "name": "페르소나 × 제약 조합 카탈로그",
+      "category": "D (Synthetic)",
+      "usage": "\"의사 + 약 이름 금지\" 등 자체 생성",
+      "contamination": "-"
+    }
+  ],
+  "crossDims": [],
+  "dataStats": {
+    "completed": 0,
+    "pass_rate": 0,
+    "avg_turns": 0,
+    "lang": {
+      "EN": 50,
+      "KO": 50
+    },
+    "cot": {
+      "think": 50,
+      "no_think": 50
+    },
+    "domains": []
+  },
+  "pipeline": [
+    {
+      "phase": "Phase 1",
+      "name": "시드 구축",
+      "detail": "페르소나×제약 조합 카탈로그\n직교 제약 패턴 분류",
+      "status": "wait"
+    },
+    {
+      "phase": "Phase 2",
+      "name": "시드 검증",
+      "detail": "제약 충돌/양립 검증\n난이도 단계 확인",
+      "status": "wait"
+    },
+    {
+      "phase": "Phase 3",
+      "name": "대화 생성",
+      "detail": "다중 제약 동시 적용\n위반 감지 로직",
+      "status": "wait"
+    },
+    {
+      "phase": "Phase 4",
+      "name": "품질 검증",
+      "detail": "제약 충족 전수 검증\n위반 사례 분류",
+      "status": "wait"
+    }
+  ],
+  "issues": [],
+  "samples": []
+}

@@ -1,0 +1,70 @@
+{
+  "id": "G4-3",
+  "name": "감정 벡터·서사성·주체성",
+  "desc": "감정 표현의 세밀한 벡터 변화, 서사적 흐름, 주체적 의사결정을 포함하는 대화",
+  "status": "wait",
+  "info": {
+    "tier": 3,
+    "target": 2500,
+    "minimum": 500,
+    "lang_ratio": "EN:KO = 4:6",
+    "cot_ratio": "think 30% / no_think 70%"
+  },
+  "seeds": [
+    {
+      "name": "감정 시나리오 카탈로그",
+      "category": "D (Synthetic)",
+      "usage": "좌절·불안·기쁨·분노 상황 자체 생성",
+      "contamination": "-"
+    },
+    {
+      "name": "한국어 감정 표현 코퍼스",
+      "category": "D (Synthetic)",
+      "usage": "한국어 고유 감정 표현 자체 정리",
+      "contamination": "-"
+    }
+  ],
+  "crossDims": [],
+  "dataStats": {
+    "completed": 0,
+    "pass_rate": 0,
+    "avg_turns": 0,
+    "lang": {
+      "EN": 40,
+      "KO": 60
+    },
+    "cot": {
+      "think": 30,
+      "no_think": 70
+    },
+    "domains": []
+  },
+  "pipeline": [
+    {
+      "phase": "Phase 1",
+      "name": "시드 구축",
+      "detail": "감정 시나리오 카탈로그\n한국어 감정 표현 코퍼스",
+      "status": "wait"
+    },
+    {
+      "phase": "Phase 2",
+      "name": "시드 검증",
+      "detail": "감정 벡터 분류 검증\n시나리오 다양성 확인",
+      "status": "wait"
+    },
+    {
+      "phase": "Phase 3",
+      "name": "대화 생성",
+      "detail": "감정 전이 흐름 반영\n주체적 의사결정 포함",
+      "status": "wait"
+    },
+    {
+      "phase": "Phase 4",
+      "name": "품질 검증",
+      "detail": "감정 일관성/자연스러움\n서사 진행도 평가",
+      "status": "wait"
+    }
+  ],
+  "issues": [],
+  "samples": []
+}

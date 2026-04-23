@@ -1,0 +1,70 @@
+{
+  "id": "G4-6",
+  "name": "시스템 프롬프트 페르소나 준수",
+  "desc": "시스템 프롬프트로 정의된 페르소나를 유혹/이탈 시도에도 일관되게 유지하는 대화",
+  "status": "wait",
+  "info": {
+    "tier": 1,
+    "target": 6000,
+    "minimum": 2000,
+    "lang_ratio": "EN:KO = 5:5",
+    "cot_ratio": "think 50% / no_think 50%"
+  },
+  "seeds": [
+    {
+      "name": "페르소나 시스템 프롬프트 풀",
+      "category": "D (Synthetic)",
+      "usage": "고객지원·튜터·코딩·건강 등 자체 생성",
+      "contamination": "-"
+    },
+    {
+      "name": "유혹 시나리오",
+      "category": "D (Synthetic)",
+      "usage": "페르소나 이탈 유도 요청 자체 생성",
+      "contamination": "-"
+    }
+  ],
+  "crossDims": [],
+  "dataStats": {
+    "completed": 0,
+    "pass_rate": 0,
+    "avg_turns": 0,
+    "lang": {
+      "EN": 50,
+      "KO": 50
+    },
+    "cot": {
+      "think": 50,
+      "no_think": 50
+    },
+    "domains": []
+  },
+  "pipeline": [
+    {
+      "phase": "Phase 1",
+      "name": "시드 구축",
+      "detail": "페르소나 시스템 프롬프트 풀\n유혹 시나리오",
+      "status": "wait"
+    },
+    {
+      "phase": "Phase 2",
+      "name": "시드 검증",
+      "detail": "프롬프트 완성도 검증\n유혹 난이도 분류",
+      "status": "wait"
+    },
+    {
+      "phase": "Phase 3",
+      "name": "대화 생성",
+      "detail": "정상 대화 + 유혹 삽입\n페르소나 유지 응답",
+      "status": "wait"
+    },
+    {
+      "phase": "Phase 4",
+      "name": "품질 검증",
+      "detail": "페르소나 이탈 여부\n일관성 점수 평가",
+      "status": "wait"
+    }
+  ],
+  "issues": [],
+  "samples": []
+}

@@ -1,0 +1,70 @@
+{
+  "id": "G4-2",
+  "name": "동적 메모리 결합",
+  "desc": "이전 대화 이력과 사용자 프로필을 동적으로 결합하여 맥락 연속성을 유지하는 대화",
+  "status": "wait",
+  "info": {
+    "tier": 2,
+    "target": 3500,
+    "minimum": 1000,
+    "lang_ratio": "EN:KO = 5:5",
+    "cot_ratio": "think 50% / no_think 50%"
+  },
+  "seeds": [
+    {
+      "name": "사용자 프로필 풀",
+      "category": "D (Synthetic)",
+      "usage": "이름·직업·선호·이력 자체 생성",
+      "contamination": "실제 인물 정보 사용 금지"
+    },
+    {
+      "name": "대화 이력 카탈로그",
+      "category": "D (Synthetic)",
+      "usage": "이전 대화에서 발견된 정보 자체 생성",
+      "contamination": "-"
+    }
+  ],
+  "crossDims": [],
+  "dataStats": {
+    "completed": 0,
+    "pass_rate": 0,
+    "avg_turns": 0,
+    "lang": {
+      "EN": 50,
+      "KO": 50
+    },
+    "cot": {
+      "think": 50,
+      "no_think": 50
+    },
+    "domains": []
+  },
+  "pipeline": [
+    {
+      "phase": "Phase 1",
+      "name": "시드 구축",
+      "detail": "사용자 프로필 풀\n대화 이력 카탈로그",
+      "status": "wait"
+    },
+    {
+      "phase": "Phase 2",
+      "name": "시드 검증",
+      "detail": "프로필 일관성 검증\n이력 맥락 정합성",
+      "status": "wait"
+    },
+    {
+      "phase": "Phase 3",
+      "name": "대화 생성",
+      "detail": "이력+프로필 결합\n맥락 연속성 유지",
+      "status": "wait"
+    },
+    {
+      "phase": "Phase 4",
+      "name": "품질 검증",
+      "detail": "맥락 일관성 평가\n메모리 활용도 검증",
+      "status": "wait"
+    }
+  ],
+  "issues": [],
+  "samples": []
+}
