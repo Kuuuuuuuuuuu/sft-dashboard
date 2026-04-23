@@ -74,16 +74,28 @@ body{font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;b
 .dim-pct{min-width:100px;text-align:right;font-size:.8em;color:#888}
 
 /* Turn chart */
-.chart-wrap{margin:16px 0;padding:16px;background:#1a1d25;border:1px solid #2a2d35;border-radius:8px}
-.chart-title{font-size:.85em;color:#ccc;margin-bottom:10px;font-weight:600}
-.chart{display:flex;align-items:flex-end;gap:6px;height:120px;padding:0 4px}
-.chart-group{display:flex;gap:2px;align-items:flex-end;flex:1}
-.chart-bar{min-width:12px;border-radius:3px 3px 0 0;min-height:2px;cursor:default}
-.chart-xlabel{font-size:.7em;color:#555;text-align:center;margin-top:4px}
+.chart-wrap{margin:16px 0;padding:20px;background:#1a1d25;border:1px solid #2a2d35;border-radius:8px}
+.chart-title{font-size:.85em;color:#ccc;margin-bottom:14px;font-weight:600}
+.chart-container{position:relative;padding-left:36px;padding-bottom:24px}
+.chart-yaxis{position:absolute;left:0;top:0;bottom:24px;width:32px;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-end;padding-right:6px}
+.chart-yaxis span{font-size:.68em;color:#555}
+.chart{display:flex;align-items:flex-end;gap:8px;height:140px;border-left:1px solid #2a2d35;border-bottom:1px solid #2a2d35;padding:0 8px 0 4px}
+.chart-group{display:flex;gap:2px;align-items:flex-end;height:100%}
+.chart-bar{min-width:14px;border-radius:3px 3px 0 0;min-height:2px;cursor:default;transition:opacity .15s}
+.chart-bar:hover{opacity:.8}
+.chart-xlabel{font-size:.72em;color:#888;text-align:center;margin-top:6px;font-weight:500}
 .chart-col{display:flex;flex-direction:column;align-items:center;flex:1}
-.chart-legend{display:flex;gap:14px;margin-top:10px;flex-wrap:wrap}
-.chart-legend-item{font-size:.75em;color:#888;display:flex;align-items:center;gap:4px}
-.chart-legend-dot{width:8px;height:8px;border-radius:2px}
+.chart-legend{display:flex;gap:16px;margin-top:12px;flex-wrap:wrap;justify-content:center}
+.chart-legend-item{font-size:.78em;color:#aaa;display:flex;align-items:center;gap:5px}
+.chart-legend-dot{width:10px;height:10px;border-radius:2px}
+
+/* Distribution donut-style bars */
+.dist-wrap{margin:16px 0;padding:16px;background:#1a1d25;border:1px solid #2a2d35;border-radius:8px}
+.dist-title{font-size:.85em;color:#ccc;margin-bottom:12px;font-weight:600}
+.dist-row{margin:12px 0}
+.dist-label{font-size:.84em;color:#ccc;margin-bottom:5px}
+.dist-bar{display:flex;height:28px;border-radius:6px;overflow:hidden}
+.dist-seg{display:flex;align-items:center;justify-content:center;font-size:.72em;font-weight:600;min-width:40px}
 
 /* Distribution */
 .dist-row{margin:14px 0}
@@ -178,11 +190,19 @@ function sheetURL(tab){return`https://docs.google.com/spreadsheets/d/${SHEET_ID}
 
 // ═══ Google Sheets에서 로드 ═══
 async function loadFromSheets(){
-  const [tasksCSV,seedsCSV,pipeCSV,issuesCSV,dimsCSV]=await Promise.all(
-    ['tasks','seeds','pipeline','issues','crossDims'].map(tab=>fetch(sheetURL(tab)).then(r=>r.text()).catch(()=>'')));
-  const tasksR=parseCSV(tasksCSV), seedsR=parseCSV(seedsCSV), pipeR=parseCSV(pipeCSV), issuesR=parseCSV(issuesCSV), dimsR=parseCSV(dimsCSV);
+  const [tasksCSV,seedsCSV,pipeCSV,issuesCSV,dimsCSV,tdCSV]=await Promise.all(
+    ['tasks','seeds','pipeline','issues','crossDims','turnDist'].map(tab=>fetch(sheetURL(tab)).then(r=>r.text()).catch(()=>'')));
+  const tasksR=parseCSV(tasksCSV), seedsR=parseCSV(seedsCSV), pipeR=parseCSV(pipeCSV), issuesR=parseCSV(issuesCSV), dimsR=parseCSV(dimsCSV), tdR=parseCSV(tdCSV);
 
-  // JSON 파일에서 samples 로드 (시트에 넣기 어려운 데이터)
+  // turnDist 데이터를 {task_id: {dim_name: {turns: count}}} 로 변환
+  const tdMap={};
+  tdR.forEach(r=>{
+    const id=r.task_id, dn=r.dim_name, t=r.turns, c=+r.count||0;
+    if(!tdMap[id])tdMap[id]={};
+    if(!tdMap[id][dn])tdMap[id][dn]={};
+    tdMap[id][dn][String(t)]=c;
+  });
+
   const samplesMap={};
   const sr=await Promise.allSettled(TASK_IDS.map(id=>fetch('data/summary_'+id+'.json').then(r=>r.ok?r.json():null)));
   sr.forEach(r=>{if(r.status==='fulfilled'&&r.value)samplesMap[r.value.id]=r.value.samples||[];});
@@ -194,7 +214,7 @@ async function loadFromSheets(){
       id, name:row.name||'', desc:row.desc||'', status:row.status||'wait',
       info:{tier:+row.tier||0,target:+row.target||0,minimum:+row.minimum||0,lang_ratio:row.lang_ratio||'',cot_ratio:row.cot_ratio||''},
       seeds:dedup(seedsR.filter(s=>s.task_id===id),'name').map(s=>({name:s.name,category:s.category,usage:s.usage,contamination:s.contamination||'-'})),
-      crossDims:dimsR.filter(d=>d.task_id===id).map(d=>({name:d.name,target:+d.target||0,actual:+d.actual||0,turnDist:{}})),
+      crossDims:dimsR.filter(d=>d.task_id===id).map(d=>({name:d.name,target:+d.target||0,actual:+d.actual||0,turnDist:(tdMap[id]||{})[d.name]||{}})),
       dataStats:{completed:+row.completed||0,pass_rate:+row.pass_rate||0,avg_turns:+row.avg_turns||0,
         lang:row.lang_ratio?parseLangRatio(row.lang_ratio):{},cot:row.cot_ratio?parseCotRatio(row.cot_ratio):{},domains:[]},
       pipeline:dedup(pipeR.filter(p=>p.task_id===id),'phase').map(p=>({phase:p.phase,name:p.name,detail:(p.detail||'').replace(/\\n/g,'\n'),status:p.status||'wait'})),
@@ -294,26 +314,41 @@ function rvDash(t){
     const turns=[...allT].sort((a,b)=>a-b);
     if(turns.length){
       const maxV=Math.max(...t.crossDims.flatMap(d=>Object.values(d.turnDist||{})),1);
-      h+='<div class="chart-wrap"><div class="chart-title">횡단차원별 턴 수 분포 (X: 턴 수 / Y: 수량)</div><div class="chart">';
+      h+='<div class="chart-wrap"><div class="chart-title">횡단차원별 턴 수 분포</div>';
+      h+='<div class="chart-container">';
+      // Y축
+      h+='<div class="chart-yaxis">';
+      for(let yi=4;yi>=0;yi--) h+=`<span>${Math.round(maxV*yi/4)}</span>`;
+      h+='</div>';
+      // 바 차트
+      h+='<div class="chart">';
       turns.forEach(tn=>{h+='<div class="chart-col"><div class="chart-group">';
-        t.crossDims.forEach((d,i)=>{const v=(d.turnDist||{})[tn]||0;const hp=Math.round(v/maxV*100);
+        t.crossDims.forEach((d,i)=>{const v=(d.turnDist||{})[tn]||0;const hp=Math.max(Math.round(v/maxV*100),v?3:0);
           h+=`<div class="chart-bar" style="height:${hp}%;background:${DIM_COLORS[i%DIM_COLORS.length]}" title="${d.name}: ${v}건"></div>`;});
         h+=`</div><div class="chart-xlabel">${tn}턴</div></div>`;});
-      h+='</div><div class="chart-legend">';
+      h+='</div></div>';
+      // 범례
+      h+='<div class="chart-legend">';
       t.crossDims.forEach((d,i)=>{const tot=Object.values(d.turnDist||{}).reduce((a,v)=>a+v,0);
         h+=`<span class="chart-legend-item"><span class="chart-legend-dot" style="background:${DIM_COLORS[i%DIM_COLORS.length]}"></span>${d.name} (${tot}건)</span>`;});
       h+='</div></div>';}}
 
+  // 분포 차트
+  h+='<div class="section-title">분포</div><div class="dist-wrap">';
   if(ds.lang&&Object.keys(ds.lang).length){
-    h+='<div class="section-title">분포</div>';
     const lE=Object.entries(ds.lang),lT=lE.reduce((a,[,v])=>a+v,0),lC={KO:'#4ecdc4',EN:'#ff6b6b'};
     h+='<div class="dist-row"><div class="dist-label">언어 분포</div><div class="dist-bar">';
-    lE.forEach(([k,v])=>h+=`<div class="dist-seg" style="width:${pct(v,lT)}%;background:${lC[k]||'#6c9fff'}">${k} ${pct(v,lT)}%</div>`);h+='</div></div>';
-    if(ds.cot){const cE=Object.entries(ds.cot),cT=cE.reduce((a,[,v])=>a+v,0),cC={think:'#4ecdc4',no_think:'#ff6b6b'};
-      h+='<div class="dist-row"><div class="dist-label">CoT 분포</div><div class="dist-bar">';
-      cE.forEach(([k,v])=>h+=`<div class="dist-seg" style="width:${pct(v,cT)}%;background:${cC[k]||'#6c9fff'}">${k} ${pct(v,cT)}%</div>`);h+='</div></div>';}
-    if(ds.domains?.length){h+='<div class="dist-row"><div class="dist-label">도메인 분포</div><div class="domain-grid">';
-      ds.domains.sort((a,b)=>b.count-a.count).forEach(d=>h+=`<div class="domain-chip"><span class="dc-n">${d.name}</span><span class="dc-v">${d.count}</span></div>`);h+='</div></div>';}}
+    lE.forEach(([k,v])=>{const w=pct(v,lT);h+=`<div class="dist-seg" style="width:${w}%;background:${lC[k]||'#6c9fff'}">${k} ${v}건 (${w}%)</div>`;});
+    h+='</div></div>';}
+  if(ds.cot){const cE=Object.entries(ds.cot),cT=cE.reduce((a,[,v])=>a+v,0),cC={think:'#4ecdc4',no_think:'#ff6b6b'};
+    h+='<div class="dist-row"><div class="dist-label">CoT 분포</div><div class="dist-bar">';
+    cE.forEach(([k,v])=>{const w=pct(v,cT);h+=`<div class="dist-seg" style="width:${w}%;background:${cC[k]||'#6c9fff'}">${k} ${v}건 (${w}%)</div>`;});
+    h+='</div></div>';}
+  if(ds.domains?.length){
+    h+='<div class="dist-row"><div class="dist-label">도메인/카테고리 분포</div><div class="domain-grid">';
+    ds.domains.sort((a,b)=>b.count-a.count).forEach(d=>h+=`<div class="domain-chip"><span class="dc-n">${d.name}</span><span class="dc-v">${d.count}</span></div>`);
+    h+='</div></div>';}
+  h+='</div>';
 
   if(t.issues?.length){h+='<div class="section-title">이슈</div><div class="issue-list">';
     t.issues.forEach(i=>h+=`<div class="issue-item"><span class="issue-sev ${i.severity}">${i.severity.toUpperCase()}</span><span class="issue-text">${i.text}</span><span class="issue-date">${i.date}</span></div>`);h+='</div>';}

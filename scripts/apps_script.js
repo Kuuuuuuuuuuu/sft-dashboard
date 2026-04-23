@@ -18,7 +18,8 @@ var SCHEMA = {
   seeds:     ["task_id","name","category","usage","contamination"],
   pipeline:  ["task_id","phase","name","detail","status"],
   issues:    ["task_id","severity","text","date"],
-  crossDims: ["task_id","name","target","actual"]
+  crossDims: ["task_id","name","target","actual"],
+  turnDist:  ["task_id","dim_name","turns","count"]
 };
 
 function ensureSheet(ss, name) {
@@ -59,14 +60,17 @@ function doPost(e) {
   }
 }
 
-/** 모든 탭의 데이터 행 삭제 (헤더 유지) */
+/** 모든 탭 삭제 후 헤더와 함께 재생성 */
 function doReset(ss) {
   for (var name in SCHEMA) {
-    var sheet = ensureSheet(ss, name);
-    var last = sheet.getLastRow();
-    if (last > 1) {
-      sheet.deleteRows(2, last - 1);
-    }
+    var sheet = ss.getSheetByName(name);
+    if (sheet) ss.deleteSheet(sheet);
+    var newSheet = ss.insertSheet(name);
+    newSheet.getRange(1, 1, 1, SCHEMA[name].length).setValues([SCHEMA[name]]);
+    var hdr = newSheet.getRange(1, 1, 1, SCHEMA[name].length);
+    hdr.setFontWeight("bold");
+    hdr.setBackground("#1a1d25");
+    hdr.setFontColor("#6c9fff");
   }
   return resp({status:"ok", action:"reset", ts:new Date().toISOString()});
 }
@@ -110,6 +114,18 @@ function syncOneTask(ss, data) {
 
   if (data.crossDims) replaceRows(ss.getSheetByName("crossDims"), taskId,
     data.crossDims.map(function(d){return [taskId, d.name||"", d.target||0, d.actual||0];}));
+
+  // turnDist: crossDims 내 turnDist 객체를 플랫하게 저장
+  if (data.crossDims) {
+    var tdRows = [];
+    data.crossDims.forEach(function(d) {
+      var td = d.turnDist || {};
+      for (var turns in td) {
+        tdRows.push([taskId, d.name||"", parseInt(turns), td[turns]]);
+      }
+    });
+    replaceRows(ss.getSheetByName("turnDist"), taskId, tdRows);
+  }
 }
 
 function upsertTask(sheet, taskId, data) {
