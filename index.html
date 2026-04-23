@@ -217,8 +217,12 @@ async function loadFromSheets(){
   });
 
   const samplesMap={};
-  const sr=await Promise.allSettled(TASK_IDS.map(id=>fetch('data/summary_'+id+'.json').then(r=>r.ok?r.json():null)));
-  sr.forEach(r=>{if(r.status==='fulfilled'&&r.value)samplesMap[r.value.id]=r.value.samples||[];});
+  for(const id of TASK_IDS){
+    try{
+      const r=await fetch('data/summary_'+id+'.json');
+      if(r.ok){const d=await r.json();if(d&&d.samples&&d.samples.length){samplesMap[id]=d.samples;console.log('[samples]',id,d.samples.length+'건');}}
+    }catch(e){console.log('[samples]',id,'error',e);}
+  }
 
   TASKS=tasksR.filter(row=>TASK_IDS.includes(row.id)).map(row=>{
     const id=row.id;
