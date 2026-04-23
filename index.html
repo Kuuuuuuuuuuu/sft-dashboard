@@ -219,10 +219,17 @@ async function loadFromSheets(){
   const samplesMap={};
   for(const id of TASK_IDS){
     try{
-      const r=await fetch('data/summary_'+id+'.json');
-      if(r.ok){const d=await r.json();if(d&&d.samples&&d.samples.length){samplesMap[id]=d.samples;console.log('[samples]',id,d.samples.length+'건');}}
-    }catch(e){console.log('[samples]',id,'error',e);}
+      const url='data/summary_'+id+'.json?t='+Date.now();
+      const r=await fetch(url);
+      console.log('[samples fetch]',id,'status:',r.status);
+      if(r.ok){
+        const d=await r.json();
+        console.log('[samples parse]',id,'keys:',Object.keys(d),'samples:',d.samples?d.samples.length:0);
+        if(d&&d.samples&&d.samples.length) samplesMap[id]=d.samples;
+      }
+    }catch(e){console.log('[samples error]',id,e);}
   }
+  console.log('[samplesMap]',Object.keys(samplesMap),Object.values(samplesMap).map(s=>s.length));
 
   TASKS=tasksR.filter(row=>TASK_IDS.includes(row.id)).map(row=>{
     const id=row.id;
