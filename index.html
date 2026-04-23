@@ -98,19 +98,23 @@ body{font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;b
 .chart-legend-item{font-size:.78em;color:#aaa;display:flex;align-items:center;gap:5px}
 .chart-legend-dot{width:10px;height:10px;border-radius:2px}
 
-/* Distribution donut-style bars */
-.dist-wrap{margin:16px 0;padding:16px;background:#1a1d25;border:1px solid #2a2d35;border-radius:8px}
-.dist-title{font-size:.85em;color:#ccc;margin-bottom:12px;font-weight:600}
-.dist-row{margin:12px 0}
-.dist-label{font-size:.84em;color:#ccc;margin-bottom:5px}
-.dist-bar{display:flex;height:28px;border-radius:6px;overflow:hidden}
-.dist-seg{display:flex;align-items:center;justify-content:center;font-size:.72em;font-weight:600;min-width:40px}
-
 /* Distribution */
-.dist-row{margin:14px 0}
-.dist-label{font-size:.84em;color:#ccc;margin-bottom:5px}
-.dist-bar{display:flex;height:22px;border-radius:5px;overflow:hidden}
-.dist-seg{display:flex;align-items:center;justify-content:center;font-size:.7em;font-weight:600}
+.dist-wrap{margin:16px 0;padding:20px;background:#1a1d25;border:1px solid #2a2d35;border-radius:8px}
+.dist-section{margin:16px 0}
+.dist-section:first-child{margin-top:0}
+.dist-header{font-size:.85em;color:#ccc;margin-bottom:10px;font-weight:600}
+.dist-visual{display:flex;align-items:center;gap:20px}
+.dist-ring{position:relative;width:90px;height:90px;flex-shrink:0}
+.dist-ring svg{transform:rotate(-90deg)}
+.dist-ring-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:.72em;color:#aaa;text-align:center;line-height:1.3}
+.dist-ring-center .rv{font-size:1.4em;font-weight:700;color:#fff}
+.dist-legend{flex:1;display:flex;flex-direction:column;gap:8px}
+.dist-legend-item{display:flex;align-items:center;gap:10px;font-size:.88em}
+.dist-legend-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0}
+.dist-legend-name{color:#ccc;min-width:70px}
+.dist-legend-bar{flex:1;height:18px;background:#12141a;border-radius:3px;overflow:hidden}
+.dist-legend-fill{height:100%;border-radius:3px}
+.dist-legend-val{min-width:90px;text-align:right;font-size:.84em;font-weight:600;color:#fff}
 .domain-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:5px;margin:10px 0}
 .domain-chip{background:#12141a;border:1px solid #2a2d35;border-radius:5px;padding:7px 10px;display:flex;justify-content:space-between;font-size:.8em}
 .domain-chip .dc-n{color:#ccc}.domain-chip .dc-v{color:#6c9fff;font-weight:600}
@@ -277,6 +281,22 @@ function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace
 function pColor(p){return p>=80?'#4ecdc4':p>=40?'#ffd93d':'#ff6b6b';}
 function num(n){return(n||0).toLocaleString();}
 
+// SVG 도넛 차트
+function mkRing(entries,total,colors){
+  const R=40,CX=45,CY=45,C=2*Math.PI*R;
+  let offset=0;
+  let paths='';
+  entries.forEach(([k,v])=>{
+    const pctV=total?v/total:0;
+    const dash=pctV*C;
+    paths+=`<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${colors[k]||'#6c9fff'}" stroke-width="10" stroke-dasharray="${dash} ${C-dash}" stroke-dashoffset="${-offset}" />`;
+    offset+=dash;
+  });
+  return `<div class="dist-ring"><svg viewBox="0 0 90 90" width="90" height="90">`
+    +`<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="#12141a" stroke-width="10" />`
+    +paths+`</svg><div class="dist-ring-center"><div class="rv">${total}</div>건</div></div>`;
+}
+
 // ── OVERVIEW ──
 function rvOvDash(){
   const tT=TASKS.reduce((a,t)=>a+(t.info?.target||0),0),tM=TASKS.reduce((a,t)=>a+(t.info?.minimum||0),0),tD=TASKS.reduce((a,t)=>a+(t.dataStats?.completed||0),0);
@@ -354,18 +374,35 @@ function rvDash(t){
 
   // 분포 차트
   h+='<div class="section-title">분포</div><div class="dist-wrap">';
+
+  // 언어 분포 — 도넛 + 바
   if(ds.lang&&Object.keys(ds.lang).length){
-    const lE=Object.entries(ds.lang),lT=lE.reduce((a,[,v])=>a+v,0),lC={KO:'#4ecdc4',EN:'#ff6b6b'};
-    h+='<div class="dist-row"><div class="dist-label">언어 분포</div><div class="dist-bar">';
-    lE.forEach(([k,v])=>{const w=pct(v,lT);h+=`<div class="dist-seg" style="width:${w}%;background:${lC[k]||'#6c9fff'}">${k} ${v}건 (${w}%)</div>`;});
-    h+='</div></div>';}
-  if(ds.cot){const cE=Object.entries(ds.cot),cT=cE.reduce((a,[,v])=>a+v,0),cC={think:'#4ecdc4',no_think:'#ff6b6b'};
-    h+='<div class="dist-row"><div class="dist-label">CoT 분포</div><div class="dist-bar">';
-    cE.forEach(([k,v])=>{const w=pct(v,cT);h+=`<div class="dist-seg" style="width:${w}%;background:${cC[k]||'#6c9fff'}">${k} ${v}건 (${w}%)</div>`;});
-    h+='</div></div>';}
+    const lE=Object.entries(ds.lang),lT=lE.reduce((a,[,v])=>a+v,0),lC={KO:'#4ecdc4',EN:'#ff6b6b',ko:'#4ecdc4',en:'#ff6b6b'};
+    h+='<div class="dist-section"><div class="dist-header">언어 분포</div><div class="dist-visual">';
+    // 도넛
+    h+=mkRing(lE,lT,lC);
+    // 범례 + 바
+    h+='<div class="dist-legend">';
+    lE.forEach(([k,v])=>{const w=pct(v,lT);
+      h+=`<div class="dist-legend-item"><span class="dist-legend-dot" style="background:${lC[k]||'#6c9fff'}"></span><span class="dist-legend-name">${k}</span><div class="dist-legend-bar"><div class="dist-legend-fill" style="width:${w}%;background:${lC[k]||'#6c9fff'}"></div></div><span class="dist-legend-val">${v}건 (${w}%)</span></div>`;});
+    h+='</div></div></div>';}
+
+  // CoT 분포 — 도넛 + 바
+  if(ds.cot&&Object.values(ds.cot).some(v=>v)){
+    const cE=Object.entries(ds.cot),cT=cE.reduce((a,[,v])=>a+v,0),cC={think:'#4ecdc4',no_think:'#ff6b6b'};
+    h+='<div class="dist-section"><div class="dist-header">CoT 분포</div><div class="dist-visual">';
+    h+=mkRing(cE,cT,cC);
+    h+='<div class="dist-legend">';
+    cE.forEach(([k,v])=>{const w=pct(v,cT);
+      h+=`<div class="dist-legend-item"><span class="dist-legend-dot" style="background:${cC[k]||'#6c9fff'}"></span><span class="dist-legend-name">${k}</span><div class="dist-legend-bar"><div class="dist-legend-fill" style="width:${w}%;background:${cC[k]||'#6c9fff'}"></div></div><span class="dist-legend-val">${v}건 (${w}%)</span></div>`;});
+    h+='</div></div></div>';}
+
+  // 도메인 분포
   if(ds.domains?.length){
-    h+='<div class="dist-row"><div class="dist-label">도메인/카테고리 분포</div><div class="domain-grid">';
-    ds.domains.sort((a,b)=>b.count-a.count).forEach(d=>h+=`<div class="domain-chip"><span class="dc-n">${d.name}</span><span class="dc-v">${d.count}</span></div>`);
+    const dT=ds.domains.reduce((a,d)=>a+d.count,0);
+    h+='<div class="dist-section"><div class="dist-header">도메인/카테고리 분포</div><div class="domain-grid">';
+    ds.domains.sort((a,b)=>b.count-a.count).forEach((d,i)=>{const w=pct(d.count,dT);
+      h+=`<div class="domain-chip" style="border-left:3px solid ${DIM_COLORS[i%DIM_COLORS.length]}"><span class="dc-n">${d.name}</span><span class="dc-v">${d.count}건 (${w}%)</span></div>`;});
     h+='</div></div>';}
   h+='</div>';
 
