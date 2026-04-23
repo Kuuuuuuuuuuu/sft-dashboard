@@ -395,7 +395,7 @@ function rvDash(t){
       h+='</div>';
       h+='<div class="chart">';
       turns.forEach(tn=>{h+='<div class="chart-col"><div class="chart-group">';
-        t.crossDims.forEach((d,i)=>{const v=(d.turnDist||{})[tn]||0;const hp=Math.max(Math.round(v/maxV*100),v?5:0);
+        t.crossDims.forEach((d,i)=>{const v=(d.turnDist||{})[String(tn)]||0;const hp=Math.max(Math.round(v/maxV*100),v?5:0);
           h+=`<div class="chart-bar" style="height:${hp}%;background:${DIM_COLORS[i%DIM_COLORS.length]}" title="${d.name}: ${v}건"></div>`;});
         h+=`</div><div class="chart-xlabel">${tn}턴</div></div>`;});
       h+='</div></div>';
