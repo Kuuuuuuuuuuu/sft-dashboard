@@ -25,7 +25,10 @@ from datetime import datetime
 # ══════════════════════════════════════════════════════════════
 #  설정
 # ══════════════════════════════════════════════════════════════
-WEBHOOK_URL = os.environ.get("https://script.google.com/macros/s/AKfycbxBOGVEO2CzCbVaF8e0QkN-3BiXItnhj2AQLuzK2BM3q2k5VAK7FFqipVA0KWCQLAuE/exec", "")
+WEBHOOK_URL = os.environ.get(
+    "DASHBOARD_WEBHOOK_URL",
+    "https://script.google.com/macros/s/AKfycbxBOGVEO2CzCbVaF8e0QkN-3BiXItnhj2AQLuzK2BM3q2k5VAK7FFqipVA0KWCQLAuE/exec"
+)
 RETRY = 2
 TIMEOUT = 30
 
