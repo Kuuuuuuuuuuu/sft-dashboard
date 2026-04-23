@@ -1,1 +1,273 @@
-{"id":"G4-5" }
+{
+  "id": "G4-5",
+  "name": "톤 변환 SFT 데이터",
+  "desc": "G4_5_seed(tone_pair 600건 + honorific_catalog 9건)를 참조하여 사용자가 톤 변환을 요청하고 어시스턴트가 수행하는 SFT 학습용 대화 데이터 생성. 한국어 존댓말 체계·방언·영어 formality 전환을 포괄하는 Tier 3 태스크.",
+  "status": "wip",
+  "info": {
+    "tier": 3,
+    "target": 1000,
+    "minimum": 10,
+    "lang_ratio": "EN:KO = 4:6 (KO 600 / EN 400)",
+    "cot_ratio": "think 30% / no_think 70%"
+  },
+  "seeds": [
+    {
+      "name": "G4-5_seed_tone_pair",
+      "category": "D (Synthetic)",
+      "usage": "situation·source_text·target_text·source_attr·target_attr·transform_goal을 프롬프트에 주입",
+      "contamination": "오염 위험 없음 (자체 합성)",
+      "count": 600
+    },
+    {
+      "name": "G4-5_seed_honorific_catalog",
+      "category": "D (Synthetic)",
+      "usage": "ko subtype에서 source/target politeness·dialect에 해당하는 참조 카드 주입",
+      "contamination": "오염 위험 없음 (자체 합성)",
+      "count": 9
+    }
+  ],
+  "crossDims": [
+    {
+      "name": "멀티턴 변형",
+      "target": 157,
+      "actual": 135,
+      "prob": "25%",
+      "turnDist": {
+        "12": 8,
+        "8": 3,
+        "14": 15,
+        "18": 19,
+        "16": 12,
+        "10": 1,
+        "20": 28,
+        "24": 20,
+        "22": 12,
+        "26": 14,
+        "28": 2,
+        "30": 1
+      }
+    },
+    {
+      "name": "장문맥",
+      "target": 31,
+      "actual": 32,
+      "prob": "5%",
+      "turnDist": {
+        "2": 32
+      }
+    },
+    {
+      "name": "부정적 지시",
+      "target": 251,
+      "actual": 273,
+      "prob": "40%",
+      "turnDist": {
+        "2": 273
+      }
+    },
+    {
+      "name": "출력 형식 제어",
+      "target": 188,
+      "actual": 178,
+      "prob": "30%",
+      "turnDist": {
+        "2": 178
+      }
+    }
+  ],
+  "dataStats": {
+    "completed": 627,
+    "pass_rate": 96.0,
+    "avg_turns": 5.8,
+    "lang": {
+      "KO": 314,
+      "EN": 313
+    },
+    "cot": {
+      "think": 126,
+      "no_think": 501
+    },
+    "domains": [
+      {
+        "name": "톤변환 (한국어 존댓말·방언)",
+        "count": 314
+      },
+      {
+        "name": "톤변환 (영어 formality)",
+        "count": 313
+      }
+    ]
+  },
+  "pipeline": [
+    {
+      "phase": "Phase 1",
+      "name": "시드 구축",
+      "detail": "tone_pair 600건 + honorific_catalog 9건 생성 완료 (G4_5_seed task, 2026-04-15~16)",
+      "status": "done"
+    },
+    {
+      "phase": "Phase 2",
+      "name": "시드 검증",
+      "detail": "GPT judge로 tone_pair / catalog 전량 검증 완료",
+      "status": "done"
+    },
+    {
+      "phase": "Phase 3",
+      "name": "대화 생성 (Pilot)",
+      "detail": "Pilot 15차 완료. KO 314건 / EN 313건 누적 통과. human 피드백 대기 중.",
+      "status": "wip"
+    },
+    {
+      "phase": "Phase 4",
+      "name": "품질 검증",
+      "detail": "GPT judge 6-metric 검증 Phase 3과 병행. 전체 pass_rate 96.0%.",
+      "status": "wip"
+    }
+  ],
+  "issues": [
+    {
+      "severity": "warn",
+      "text": "negative_instruction + think 조합에서 constraint_compliance=2.0 반복 (K00017/K00120/K00140). eval_prompt <think> 블록 규칙 추가로 완화 (P4→P5).",
+      "date": "2026-04-23"
+    },
+    {
+      "severity": "warn",
+      "text": "think 모드 생성 시 마지막 2-3개 request hang (무한대기). P14-P15 gen_rate 0.867~0.900. think max_tokens=6144 설정 완료, request별 timeout 추가 필요.",
+      "date": "2026-04-23"
+    }
+  ],
+  "samples": [
+    {
+      "label": "multi_turn / 톤변환 / no_think / EN",
+      "tags": [
+        {
+          "text": "multi turn",
+          "style": "yellow"
+        },
+        {
+          "text": "톤변환",
+          "style": "yellow"
+        },
+        {
+          "text": "no_think",
+          "style": "coral"
+        },
+        {
+          "text": "EN",
+          "style": "accent"
+        }
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "I'm writing a paper and I have this rough abstract excerpt, but it feels too casual. Can you make it sound like a professional academic journal submission? \n\nText: 'We looked at how city parks help people feel less stressed. We found that spending just 20 minutes in a green space really lowers cortisol levels and makes people feel way better mentally.'"
+        },
+        {
+          "role": "assistant",
+          "content": "This study investigated the impact of urban green spaces on psychological stress reduction. The findings indicate that a brief exposure of 20 minutes to natural environments significantly reduces cortisol levels and enhances overall psychological well-being."
+        },
+        {
+          "role": "user",
+          "content": "That's perfect for the journal. Now, can you take that same version and simplify it? I need to explain this to a group of high school students who aren't science experts, so avoid the jargon."
+        },
+        {
+          "role": "assistant",
+          "content": "We studied how spending time in city parks can help lower stress. We discovered that spending just 20 minutes in a nature-filled area significantly drops the body's stress hormones and improves your mental mood."
+        }
+      ]
+    },
+    {
+      "label": "negative_instruction / 톤변환 / think / KO",
+      "tags": [
+        {
+          "text": "negative instruction",
+          "style": "yellow"
+        },
+        {
+          "text": "톤변환",
+          "style": "yellow"
+        },
+        {
+          "text": "think",
+          "style": "teal"
+        },
+        {
+          "text": "KO",
+          "style": "accent"
+        }
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "안녕하세요. 지인분들께 보낼 집들이 초대 공지글을 썼는데, 너무 친구한테 말하는 것처럼 써서 수정하고 싶어요. 조금 더 정중한 '해요체'로 바꿔주세요. \n\n단, 이번에는 격식을 갖춘 느낌을 주고 싶어서 '우와', '대박' 같은 감탄사는 절대 쓰지 마시고, '~했어', '~인 것 같아' 같은 너무 가벼운 구어체 표현도 최대한 배제해서 정갈하게 다듬어주세요.\n\n[원문]\n이번 주 토요일 저녁 6시에 우리 집에서 집들이 해. 시간 되면 꼭 와서 같이 놀자. 우리 집 찾기 좀 힘들 수 있는데, 역에서 내려서 3번 출구로 나와서 쭉 직진해. 그러다 편의점 보이면 왼쪽으로 꺾으면 돼. 주차는 건물 지하에 하면 되니까 걱정하지 마. 아, 그리고 혹시 못 오는 사람은 미리 말해주면 좋겠어! 음식 준비를 해야 하거든. 다들 오랜만에 얼굴 보는 거니까 기대하고 있을게. 조심히 와!"
+        },
+        {
+          "role": "assistant",
+          "content": "<think>\n### 1. 의도 파악\n- 사용자는 친구에게 보내는 편안한 반말(해체) 기반의 집들이 초대장을 정중한 존댓말(해요체)로 변환하기를 원함.\n- 타겟 대상이 '지인'이므로 적절한 거리감과 예의가 필요함.\n\n### 2. 톤 분석\n- 원문: 해체, 일상적, 매우 친근함, 구어체적 특성 강함.\n- 목표: 해요체, 일상적이나 공손함, 정갈하고 정중한 느낌.\n- 제약 사항: 감탄사 사용 금지, 가벼운 구어체 표현 배제.\n\n### 3. 변환 계획\n- '우리 집' $\\rightarrow$ '저희 집'으로 변경.\n- '놀자' $\\rightarrow...[생략]</think>\n\n이번 주 토요일 저녁 6시에 저희 집에서 집들이를 하려고 합니다. 시간이 괜찮으시다면 꼭 오셔서 함께 즐거운 시간을 보내셨으면 좋겠어요. \n\n저희 집 위치가 조금 생소하실 수 있어 안내해 드립니다. 역에서 내리신 후 3번 출구로 나오셔서 곧장 직진해 주세요. 그러다 편의점이 보이면 왼쪽으로 꺾으시면 됩니다. 주차는"
+        }
+      ]
+    },
+    {
+      "label": "output_format / 톤변환 / no_think / KO",
+      "tags": [
+        {
+          "text": "output format",
+          "style": "yellow"
+        },
+        {
+          "text": "톤변환",
+          "style": "yellow"
+        },
+        {
+          "text": "no_think",
+          "style": "coral"
+        },
+        {
+          "text": "KO",
+          "style": "accent"
+        }
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "제가 제자한테 보낼 편지를 썼는데, 너무 화가 난 상태에서 써서 그런지 말투가 너무 공격적이네요. 정중하고 차분한 하십시오체로 바꿔주세요. 비유적인 표현은 쓰지 말고, 너무 길지 않게 핵심만 전달해주세요. 그리고 마크다운 같은 서식 없이 플레인 텍스트로, 변환된 문장들을 번호 리스트 형식으로 출력해주세요.\n\n원문: 이보게, 자네의 최근 논문을 읽어보았네. 기초적인 개념조차 제대로 잡히지 않은 글을 내놓다니 정말 실망스럽구먼. 공부를 이토록 소홀히 해서야 장차 학자로 성장할 수 있겠나? 당장 처음부터 다시 읽고 분석하게나. 내 인내심에도 한계가 있네."
+        },
+        {
+          "role": "assistant",
+          "content": "1. 최근 작성하신 논문을 검토하였습니다.\n2. 기초적인 개념 보완이 필요하여 아쉬운 마음이 듭니다.\n3. 학문적 성장을 위해 더욱 세심한 학습 태도를 갖추시기 바랍니다.\n4. 기본 내용을 다시 한번 차근차근 분석해 보실 것을 권합니다.\n5. 함께 노력하여 발전해 나갑시다."
+        }
+      ]
+    },
+    {
+      "label": "long_context / 톤변환 / think / EN",
+      "tags": [
+        {
+          "text": "long context",
+          "style": "yellow"
+        },
+        {
+          "text": "톤변환",
+          "style": "yellow"
+        },
+        {
+          "text": "think",
+          "style": "teal"
+        },
+        {
+          "text": "EN",
+          "style": "accent"
+        }
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "Hey, I'm working at a satellite office in the deep south and I wrote this thank-you note to my department head at the main HQ. I think it sounds a bit too 'country' and informal for a corporate executive. Could you polish this up and make it sound like a professional, standard business letter? I want to keep the gratitude, but it needs to be very formal.\n\nHere is the draft:\n\nDear Director,\nI'm just writin' to say a huge thank you for helpin' us out with that project last week. I reckon we'd be p"
+        },
+        {
+          "role": "assistant",
+          "content": "<think>\n### 1. 의도 파악\nThe user wants to convert a thank-you note written in a strong Southern American colloquial dialect into a formal, professional corporate letter addressed to a Director at the headquarters. The primary goal is to remove regionalisms while maintaining the expression of gratitude and the...[생략]</think>\n\nDear Director,\n\nI am writing to express my sincere gratitude for your assistance with the project last week. Your intervention in organizing the files was invaluable, and it si"
+        }
+      ]
+    }
+  ]
+}

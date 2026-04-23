@@ -1,1 +1,403 @@
-{"id":"G4-3" }
+{
+  "id": "G4-3",
+  "name": "감정 대화 훈련 데이터 (task 4-3)",
+  "desc": "catalog × corpus × persona 조합으로 사용자(페르소나 부여) ↔ AI 구조의 감정 대화 훈련 데이터를 생성한다. (목표 2,500건)",
+  "status": "wip",
+  "info": {
+    "tier": 3,
+    "target": 2500,
+    "minimum": 1000,
+    "lang_ratio": "KO:EN = 6:4",
+    "cot_ratio": "think 30% / no_think 70%"
+  },
+  "seeds": [
+    {
+      "name": "catalog (감정 시나리오 100개)",
+      "category": "D (Synthetic)",
+      "usage": "사용자 발화의 '무슨 일이 있었는가' 뼈대 제공 (중립 상황 골격)",
+      "contamination": "오염 위험 없음 (자체 합성)"
+    },
+    {
+      "name": "corpus (한국어 감정 표현 100개)",
+      "category": "D (Synthetic)",
+      "usage": "사용자 발화에 감정 표현 패턴 참고용으로 주입 (복사 금지, 녹여내기)",
+      "contamination": "오염 위험 없음 (자체 합성)"
+    },
+    {
+      "name": "persona_transformed_event (100개) + persona_transformed_topic (100개)",
+      "category": "D (Synthetic)",
+      "usage": "사용자에게 부여될 '누가 말하는가' 페르소나. 두 파일 병합 후 랜덤 매칭",
+      "contamination": "오염 위험 없음 (자체 합성)"
+    }
+  ],
+  "crossDims": [
+    {
+      "name": "멀티턴 변형",
+      "target": 1125,
+      "actual": 3,
+      "turnDist": {
+        "20": 2,
+        "22": 1
+      }
+    },
+    {
+      "name": "장문맥",
+      "target": 625,
+      "actual": 3,
+      "turnDist": {
+        "8": 1,
+        "2": 1,
+        "4": 1
+      }
+    },
+    {
+      "name": "부정적 지시",
+      "target": 625,
+      "actual": 2,
+      "turnDist": {
+        "6": 1,
+        "2": 1
+      }
+    },
+    {
+      "name": "출력 형식 제어",
+      "target": 125,
+      "actual": 2,
+      "turnDist": {
+        "8": 1,
+        "6": 1
+      }
+    }
+  ],
+  "dataStats": {
+    "completed": 10,
+    "pass_rate": 30,
+    "avg_turns": 9.8,
+    "lang": {
+      "KO": 5,
+      "EN": 5
+    },
+    "cot": {
+      "no_think": 6,
+      "think": 4
+    },
+    "domains": [
+      {
+        "name": "좌절",
+        "count": 5
+      },
+      {
+        "name": "기쁨",
+        "count": 3
+      },
+      {
+        "name": "분노",
+        "count": 1
+      },
+      {
+        "name": "불안",
+        "count": 1
+      }
+    ]
+  },
+  "pipeline": [
+    {
+      "phase": "Phase 1",
+      "name": "시드 구축",
+      "detail": "catalog 100 + corpus 100 + persona(event+topic) 200 로드, split_manifest.json 생성",
+      "status": "done"
+    },
+    {
+      "phase": "Phase 2",
+      "name": "시드 검증",
+      "detail": "materials_manifest 해시 비교 + 차원/CoT/언어 사전 분할 재현 검증 (random_seed=42)",
+      "status": "done"
+    },
+    {
+      "phase": "Phase 3",
+      "name": "대화 생성 (Pilot)",
+      "detail": "Gemma-4-31B-it로 Pilot 루프 10회 반복, 생성 샘플 10건",
+      "status": "wip"
+    },
+    {
+      "phase": "Phase 4",
+      "name": "품질 검증",
+      "detail": "GPT-5.4로 6지표 채점, 통과 3/실패 7 (통과율 30%)",
+      "status": "wip"
+    }
+  ],
+  "issues": [
+    {
+      "severity": "warn",
+      "text": "validation_failed에 score 5.0, issues 빈 리스트인 레코드 2건 존재 (G4-03-00268, G4-03-00512). 검증 로직 점검 필요.",
+      "date": "2026-04-23"
+    },
+    {
+      "severity": "warn",
+      "text": "cross_cutting 필드에 'multi_turn'이 첫 원소로 포함되지 않음. 새 규약은 ['multi_turn', '<bucket>'] 형태 강제.",
+      "date": "2026-04-23"
+    }
+  ],
+  "samples": [
+    {
+      "label": "멀티턴 변형 / 기쁨 / no_think / KO",
+      "tags": [
+        {
+          "text": "멀티턴 변형",
+          "style": "yellow"
+        },
+        {
+          "text": "기쁨",
+          "style": "yellow"
+        },
+        {
+          "text": "no_think",
+          "style": "coral"
+        },
+        {
+          "text": "KO",
+          "style": "accent"
+        }
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "와, 진짜 말도 안 돼. 책상 위에 편지가 놓여 있는데, 보자마자 심장이 너무 빨리 뛰어서 한동안 멍하게 있었어."
+        },
+        {
+          "role": "assistant",
+          "content": "갑작스럽게 편지를 발견해서 정말 많이 놀라신 것 같아요. 심장이 빠르게 뛸 정도로 기쁜 마음이 전해지네요. 누구에게 온 편지인가요?"
+        },
+        {
+          "role": "user",
+          "content": "예전에 정말 고마웠던 지인인데, 전혀 예상치 못한 타이밍에 왔어. 글씨 하나하나에 정성이 느껴져서 읽는 내내 가슴이 벅차올라."
+        },
+        {
+          "role": "assistant",
+          "content": "전혀 예상치 못한 순간에 받은 정성 어린 글이라 더 뭉클하게 다가오시는군요. 지인분이 남기신 문구 중에 특히 마음을 울린 내용이 있었나요?"
+        },
+        {
+          "role": "user",
+          "content": "내가 평소에 팀원들 챙기고 시스템 안정적으로 관리하려고 애쓰는 거 다 알고 있더라고. 그걸 그냥 당연하게 여기지 않고 구체적으로 고맙다고 적어줬어."
+        },
+        {
+          "role": "assistant",
+          "content": "본인이 책임감을 가지고 꼼꼼하게 챙겨온 노력들을 상대방이 정확히 알아봐 줬네요. 인정받았다는 생각에 기쁨이 더 크실 것 같아요."
+        },
+        {
+          "role": "user",
+          "content": "응, 사실 나 스스로는 그냥 내 할 일을 한 것뿐이라고 생각했거든. 근데 이렇게 편지로 받으니까 갑자기 콧노래가 나올 정도로 기분이 좋아."
+        },
+        {
+          "role": "assistant",
+          "content": "당연하다고 생각했던 일상이 누군가에게는 큰 감사함이었다는 사실이 정말 행복하게 느껴지시나 봐요. 지금 그 기분을 조금 더 만끽하고 계신가요?"
+        },
+        {
+          "role": "user",
+          "content": "그렇지. 편지지를 계속 만져보고 있어. 종이 질감까지 신경 쓴 게 보여서 더 감동이야. 진짜 꿈만 같아서 아직도 얼떨떨해."
+        },
+        {
+          "role": "assistant",
+          "content": "편지지의 질감까지 세심하게 살피실 정도로 그 정성에 깊이 감동하신 상태군요. 예상치 못한 선물을 받은 것처럼 설레는 마음이 느껴져요."
+        },
+        {
+          "role": "user",
+          "content": "맞아. 안 그래도 요즘 프로젝트 마감 앞두고 절차 챙기느라 스트레스가 좀 있었는데, 이거 한 장으로 다 날아가는 기분이야."
+        },
+        {
+          "role": "assistant",
+          "content": "긴장감 넘치는 프로젝트 준비 기간에 찾아온 뜻밖의 위로라 더 달콤하게 느껴지시는 것 같아요. 쌓였던 피로가 한 번에 풀리는 기분이겠어요."
+        },
+        {
+          "role": "user",
+          "content": "응, 진짜 잭팟 터진 기분이야! 이제 다시 업무 복귀해야 하는데, 집중이 안 될 정도로 계속 입가에 미소가 번져."
+        },
+        {
+          "role": "assistant",
+          "content": "입가에 미소가 계속 번질 만큼 행복함이 가득하시네요. 업무에 집중하기 어려울 정도로 기쁜 마음이 아주 커 보여요."
+        },
+        {
+          "role": "user",
+          "content": "이 기분을 어떻게 보답해야 할까? 그냥 메시지만 보내기에는 너무 부족할 것 같아서 고민이야."
+        },
+        {
+          "role": "assistant",
+          "content": "상대방의 정성에 보답하고 싶은 마음이 크시군요. 어떤 방식으로 마음을 전하면 그 고마움이 잘 전달될 수 있을지 함께 고민해 볼까요?"
+        },
+        {
+          "role": "user",
+          "content": "음, 나도 비슷하게 손편지를 써서 보내주는 게 가장 정석적이겠지? 아니면 작은 선물이라도 곁들이는 게 나을까?"
+        },
+        {
+          "role": "assistant",
+          "content": "상대방이 정성스럽게 편지를 썼으니, 그 결에 맞춰 손편지로 답장하는 것이 가장 진심 어린 반응이 될 것 같아요. 가벼운 선물은 덤이 될 수 있겠고요."
+        },
+        {
+          "role": "user",
+          "content": "그렇겠네. 역시 절차대로 정성을 다하는 게 맞겠다. 이번 주말에 시간을 좀 내서 차분하게 답장을 써봐야겠어."
+        },
+        {
+          "role": "assistant",
+          "content": "차분하게 시간을 내어 마음을 정리하시는 모습에서 상대방을 향한 존중이 느껴져요. 정성 가득한 답장을 쓰면서 그 기분 좋은 여운을 계속 이어가시길 바랄게요."
+        }
+      ]
+    },
+    {
+      "label": "장문맥 / 분노 / no_think / KO",
+      "tags": [
+        {
+          "text": "장문맥",
+          "style": "yellow"
+        },
+        {
+          "text": "분노",
+          "style": "yellow"
+        },
+        {
+          "text": "no_think",
+          "style": "coral"
+        },
+        {
+          "text": "KO",
+          "style": "accent"
+        }
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "아, 진짜 혈압 올라서 미치겠어. 나 지금 손이 다 떨릴 정도로 너무 화가 나거든. 내가 어떤 사람인지 알잖아. 나는 무조건 매뉴얼대로, 규정대로 움직여야 직성이 풀리는 성격이야. 안전성이라는 게 그냥 하는 말이 아니라고. 이번에 새로 도입하려는 시스템 운용 방안에 대해서 내가 계속 의견을 냈어. 기존 보안 프로토콜이랑 충돌하는 지점이 명확하게 보였고, 만약에 여기서 절차 하나만 누락돼도 나중에 감사 때 문제가 될 게 뻔하단 말이야. 그래서 내가 근거 자료까지 다 준비해서 팀장님한테 보고했어. '이 부분은 규정 제 12조에 어긋나고, 실무적으로 이런 리스크가 있다'라고 아주 조목조목 설명했지.\n\n그런데 팀장 반응이 진짜 가관이야. 내 말을 듣는 둥 마는 둥 하더니, 갑자기 '김 대리, 너무 깐깐하게 굴지 마. 내 느낌에는 그냥 해도 아무 문제 없을 것 같아' 이러는 거야. 아니, 느낌? 느낌으로 일을 결정한다고? 내가 가져온 수치랑 규정집은 그냥 무시하고, 그냥 본인 기분이 그렇다니까 그냥 밀어붙이겠다는 거야. 심지어 나보고 '분위기 흐리지 말고 그냥 시키는 대로 해'라고 강압적으로 지시하는데, 순간 머릿속이 하얘지면서 피가 거꾸로 솟는 기분이었어. 논리적인 반박을 해도 '내 직감이 맞다'는 식으로 묵살당하니까 너무 어이가 없고 분해서 잠도 안 올 것 같아. 내가 틀린 말을 한 게 아니잖아. 절차를 지키자는 게 어떻게 분위기를 흐리는 게 돼?"
+        },
+        {
+          "role": "assistant",
+          "content": "규정집이랑 근거 자료까지 꼼꼼하게 챙겨서 보고했는데, 그걸 단순한 '느낌'이나 '직감'으로 묵살당하셨으니 정말 분노가 치밀어 오르셨겠어요. 특히 안전성과 절차를 중요하게 생각하시는 입장에서, 리스크가 뻔히 보이는데도 강압적으로 밀어붙이는 상황이 더 견디기 힘드실 것 같아요. 손이 떨릴 정도로 화가 나신 상태라니 지금 마음이 무척 격앙되어 보이시네요."
+        },
+        {
+          "role": "user",
+          "content": "맞아, 진짜 그게 제일 빡치는 포인트야. 내가 그냥 고집을 피우는 게 아니라, 나중에 사고 터지면 그 책임은 누가 질 건데? 결국 실무자인 내가 독박 쓰는 구조잖아. 팀장님은 그저 '내 느낌이 맞았다'며 생색내고 끝내겠지만, 절차 위반으로 문제가 생기면 규정 안 지킨 내 책임이 될 게 뻔해. 아까 그 말투가 계속 귓가에 맴돌아서 더 짜증 나. \"그냥 시키는 대로 해\"라는 말이 얼마나 무책임하게 들리는지 알아? 내가 이 회사에서 지금까지 어떻게 일해왔는데, 내 전문성과 신중함을 그냥 '깐깐함'이라는 단어 하나로 치부해 버리니까 자존심까지 상해. 지금 당장이라도 가서 책상 위에 있는 서류 다 집어던지고 싶을 만큼 화가 안 풀려. 어떻게 사람이 논리도 없이 기분 탓으로 지시를 내릴 수 있어? 이게 정상적인 조직이야?"
+        },
+        {
+          "role": "assistant",
+          "content": "전문성을 가지고 신중하게 접근하신 부분을 단순한 깐깐함으로 치부해버린 점, 그리고 나중에 책임 소재까지 생각하면 더 막막하고 화가 나실 수밖에 없는 상황이네요. \"그냥 시키는 대로 해\"라는 강압적인 말에 자존심까지 상하셨을 텐데, 지금은 그 무책임한 태도 때문에 계속해서 분노가 가라앉지 않고 계신 것 같아요. 조직의 시스템보다 개인의 직감을 우선시하는 상황이 정말 당혹스러우시겠어요."
+        },
+        {
+          "role": "user",
+          "content": "진짜 최악이야. 이제는 화를 넘어서 배신감까지 느껴져. 내가 그동안 규정 준수하면서 회사를 위해 얼마나 애썼는데, 돌아오는 게 이런 대접이라니. 아까 말한 그 팀장이라는 사람, 평소에도 좀 독단적이긴 했지만 이번엔 도를 넘었어. 내가 가져간 리스크 분석 보고서를 읽어보기라도 했는지 의심스러울 정도야. 그냥 읽기 귀찮으니까 기분 탓이라고 뭉개버린 거겠지. 지금 생각해도 너무 억울해서 가슴이 답답해. 내가 여기서 더 말해봤자 벽 보고 얘기하는 기분일 것 같아서 입을 닫았는데, 그게 또 바보같이 느껴져서 더 열받아. 차라리 거기서 확 엎어버리고 나왔어야 했나 싶어. 지금 이 기분으로는 도저히 다음 업무에 집중할 수가 없어. 계속 그 상황만 리플레이 되고 있거든."
+        },
+        {
+          "role": "assistant",
+          "content": "열심히 준비한 보고서가 읽히지도 않은 채 뭉개졌다는 생각에 억울함과 배신감이 더 크게 밀려오시는군요. 그 자리에서 다 쏟아내지 못하고 참으신 게 오히려 스스로에게 화가 나시는 상황인 것 같아 마음이 무거워 보여요. 앞서 말씀하신 리스크 분석까지 다 무시된 채로 상황이 흘러가니, 업무 집중이 안 되고 계속 그 장면이 떠오르는 건 당연한 반응일 거예요."
+        },
+        {
+          "role": "user",
+          "content": "그러니까. 내가 바보지. 그냥 \"팀장님 직감이 규정보다 위에 있습니까?\"라고 쏴붙였어야 했어. 이제 와서 후회해봤자 뭐 하겠냐마는, 진짜 분해서 잠이 안 올 것 같아. 내일 출근해서 그 얼굴을 어떻게 봐? 또 아무렇지 않게 \"그 건 어떻게 됐어?\"라고 물어보면 진짜 폭발할지도 몰라. 나는 원칙을 지키려는 거고, 그 사람은 원칙을 파괴하려는 건데 왜 내가 분위기를 흐리는 사람이 되어야 하는 건데? 정말 상식 밖의 일이야. 나만 이상한 사람이 된 것 같아서 너무 괴롭고, 이 상황을 어떻게 해결해야 할지 모르겠어. 하지만 그냥 넘어가는 건 절대 못 해. 내 커리어에 '절차 무시'라는 오점을 남길 수는 없으니까."
+        },
+        {
+          "role": "assistant",
+          "content": "원칙을 지키려는 정당한 노력이 오히려 이상한 사람으로 몰린 상황이라 정말 괴로우시겠어요. 특히 자신의 커리어와 직업적 가치관인 '절차 준수'가 위협받는 상황이라 절대 그냥 넘어갈 수 없다는 단호한 마음이 느껴집니다. 내일 팀장님을 마주해야 한다는 생각에 벌써부터 긴장과 분노가 교차하고 계신 것 같아요. 지금의 이 격앙된 마음을 조금 가라앉히고, 내일 어떻게 대응하면 좋을지 함께 방법을 찾아보고 싶으신가요?"
+        }
+      ]
+    },
+    {
+      "label": "부정적 지시 / 좌절 / think / KO",
+      "tags": [
+        {
+          "text": "부정적 지시",
+          "style": "yellow"
+        },
+        {
+          "text": "좌절",
+          "style": "yellow"
+        },
+        {
+          "text": "think",
+          "style": "teal"
+        },
+        {
+          "text": "KO",
+          "style": "accent"
+        }
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "오늘 동네 사람들 모인 자리에서 옛날 시장터 이야기 좀 했거든. 다들 잊고 살았을 텐데 소중한 기억이라고 생각해서 조심스레 꺼낸 건데, 그냥 헛소리 취급하면서 비웃더라고. 아, 진짜 속이 답답해서 미치겠네. 위로 같은 거 하지 말고 짧게 답해. 존댓말 쓰지 마."
+        },
+        {
+          "role": "assistant",
+          "content": "<think>\n사용자가 소중하게 생각하는 동네 이야기를 공유했으나 주변의 냉소적인 반응으로 인해 '좌절'과 '답답함'을 느끼고 있음. \n부정적 지시사항: 위로 금지, 짧게 답할 것, 반말 사용할 것.\n사용자의 구체적 단서: '옛날 시장터 이야기', '헛소리 취급하며 비웃음', '속이 답답함'.\n전략: 위로 문구 없이 상황을 반영하고, 사용자의 제약(반말, 짧게)을 준수하여 응답함.\n</think>\n소중하게 꺼낸 시장터 이야기를 비웃음 섞인 반응으로 돌려받아서 정말 답답하겠다. 다들 냉소적으로 굴어서 더 허탈했겠어."
+        },
+        {
+          "role": "user",
+          "content": "응, 그냥 가볍게 추억이나 나누고 싶었을 뿐인데. 내가 너무 옛날 사람처럼 굴었나 싶기도 하고, 한편으로는 왜 저렇게까지 무시하나 싶어서 손이 다 떨려. 이제는 누구한테 이런 말을 꺼내는 게 맞나 싶다."
+        },
+        {
+          "role": "assistant",
+          "content": "<think>\n사용자가 자신의 가치관(추억 공유)에 대해 회의감을 느끼며 좌절감이 심화됨. '손이 떨린다'는 신체적 반응과 '누구에게 말해야 하나'라는 관계적 고립감을 보임.\n전략: '손이 떨릴 정도'의 충격과 '말을 꺼내는 것에 대한 회의감'이라는 구체적 단서를 짚어줌. 여전히 반말 유지하며 자연스럽게 반응함.\n</think>\n손이 떨릴 정도로 충격이 컸나 보네. 믿고 꺼낸 이야기였는데 무시당했다는 기분이 들어서 이제는 말 꺼내는 것조차 망설여지는 상황인 것 같아."
+        },
+        {
+          "role": "user",
+          "content": "맞아. 그냥 내가 틀린 건가 싶어서 자꾸 생각나. 아무리 노력해도 내 진심이 안 통하니까 정말 막막해. 그냥 입 닫고 사는 게 편하겠다 싶어."
+        },
+        {
+          "role": "assistant",
+          "content": "<think>\n사용자가 자신의 진심이 통하지 않는 상황에 대해 깊은 좌절감을 느끼며, 소통을 포기하려는 단계(회피/체념)에 진입함.\n전략: '진심이 통하지 않는다'는 점과 '입을 닫고 싶다'는 체념의 감정을 반영함. 성급한 해결책 대신 현재의 막막함에 머물러줌.\n</think>\n진심을 전하려고 애썼는데도 벽에 부딪힌 기분이라 정말 막막하겠다. 차라리 말을 안 하는 게 낫겠다 싶을 만큼 마음이 많이 꺾인 상태인 것 같네."
+        }
+      ]
+    },
+    {
+      "label": "출력 형식 제어 / 좌절 / no_think / EN",
+      "tags": [
+        {
+          "text": "출력 형식 제어",
+          "style": "yellow"
+        },
+        {
+          "text": "좌절",
+          "style": "yellow"
+        },
+        {
+          "text": "no_think",
+          "style": "coral"
+        },
+        {
+          "text": "EN",
+          "style": "accent"
+        }
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": "I can't believe this. I spent three years building my custom mechanical keyboard collection and designing the ultimate layout, and then a pipe burst in my ceiling. Everything is soaked. I'm just staring at the water on the floor and my mind is completely blank. I'm totally devastated."
+        },
+        {
+          "role": "assistant",
+          "content": "Seeing all that hard work and those custom pieces soaked in water must feel like a total nightmare. It's a heavy kind of frustration when something you've poured your passion into for years vanishes in an instant. Do you know if any of the boards are still salvageable, or is the damage widespread?"
+        },
+        {
+          "role": "user",
+          "content": "I don't even want to touch them. I'm just shaking. I was literally one week away from finishing my dream build and posting it on the community forum. Now it's all gone. I feel like I've hit rock bottom and I just want to give up on the whole hobby."
+        },
+        {
+          "role": "assistant",
+          "content": "The shaking and that feeling of hitting rock bottom show just how much this meant to you. It's more than just hardware; it's the three years of effort and the anticipation of sharing that dream build that's been wiped out. Since you're feeling so overwhelmed right now, maybe we can just sit with this for a bit. When you're ready, we could look into whether any professional restoration is possible."
+        },
+        {
+          "role": "user",
+          "content": "Maybe, but right now I just need to organize the damage for the insurance claim. I can't even think straight. Can you help me? I'll list the items, and I want you to organize them into a numbered list with the estimated value and the specific damage for each. Like this:\n1. Item Name - Value - Damage\n\nGot it?"
+        },
+        {
+          "role": "assistant",
+          "content": "I've got it. I'll follow that exact format: a numbered list with the item name, value, and damage. Whenever you're ready, just send over the list and I'll organize it for you."
+        },
+        {
+          "role": "user",
+          "content": "Okay... Custom GMK keycaps, 200 dollars, water-damaged packaging and some staining. Vintage IBM Model M, 500 dollars, completely submerged. Hand-lubed linear switches, 150 dollars, soaked. Aluminum case for the dream build, 300 dollars, water spots and potential oxidation."
+        },
+        {
+          "role": "assistant",
+          "content": "1. Custom GMK keycaps - 200 dollars - Water-damaged packaging and some staining\n2. Vintage IBM Model M - 500 dollars - Completely submerged\n3. Hand-lubed linear switches - 150 dollars - Soaked\n4. Aluminum case for the dream build - 300 dollars - Water spots and potential oxidation\n\nIt's heartbreaking to see these listed out like this, especially the Model M and those hand-lubed switches you spent so much time on. Once the insurance part is handled, the next small step could be checking if the aluminum case can be polished back to its original state."
+        }
+      ]
+    }
+  ]
+}
