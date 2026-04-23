@@ -253,8 +253,16 @@ async function loadFromJSON(){
 // ═══ 통합 로더 ═══
 async function loadTasks(){
   TASKS=[];
-  if(SHEET_ID) await loadFromSheets(); else await loadFromJSON();
-  // 사이드바 빌드
+  try{
+    console.log('[load] SHEET_ID:', SHEET_ID ? 'set' : 'empty');
+    if(SHEET_ID) await loadFromSheets(); else await loadFromJSON();
+    console.log('[load] TASKS:', TASKS.length, '개 로드');
+    TASKS.forEach(t=>console.log('[load]', t.id, t.name, 'samples:', (t.samples||[]).length));
+  }catch(e){
+    console.error('[load] 에러:', e);
+    // Sheets 실패 시 JSON fallback
+    try{await loadFromJSON();console.log('[load] JSON fallback:', TASKS.length);}catch(e2){console.error('[load] JSON도 실패:', e2);}
+  }
   const sb=document.getElementById('sidebar');
   let h='<div class="sb-title">SFT 데이터 구축</div>';
   h+='<div class="sb-item active" data-id="__all__" onclick="onNav(\'__all__\')">전체 요약</div>';
