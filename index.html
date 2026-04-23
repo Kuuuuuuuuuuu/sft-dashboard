@@ -64,14 +64,23 @@ body{font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;b
 .seed-cat{color:#4ecdc4;font-size:.78em;font-weight:600}
 .seed-safe{color:#4ecdc4;font-size:.82em}.seed-risk{color:#ffd93d;font-size:.82em}
 
-/* Cross dims */
-.dim-row{display:flex;align-items:center;gap:10px;margin:7px 0;font-size:.84em}
-.dim-label{min-width:110px;color:#ccc}
-.dim-bar-wrap{flex:1;height:20px;background:#12141a;border-radius:4px;position:relative;overflow:hidden}
-.dim-bar{height:100%;border-radius:4px}
-.dim-bar.ok{background:linear-gradient(90deg,#2a5a4a,#4ecdc4)}.dim-bar.under{background:linear-gradient(90deg,#5a3a1a,#ffd93d)}.dim-bar.over{background:linear-gradient(90deg,#2a3a5a,#6c9fff)}
-.dim-target{position:absolute;top:0;bottom:0;width:2px;background:#fff;opacity:.4}
-.dim-pct{min-width:100px;text-align:right;font-size:.8em;color:#888}
+/* Cross dims — target vs actual 비교 */
+.dim-chart-wrap{margin:12px 0;padding:16px;background:#1a1d25;border:1px solid #2a2d35;border-radius:8px}
+.dim-chart-row{display:flex;align-items:center;gap:10px;margin:10px 0}
+.dim-chart-label{min-width:110px;font-size:.84em;color:#ccc;text-align:right}
+.dim-chart-bars{flex:1;display:flex;flex-direction:column;gap:3px}
+.dim-chart-bar-row{display:flex;align-items:center;gap:6px}
+.dim-chart-bar-bg{flex:1;height:14px;background:#12141a;border-radius:3px;overflow:hidden}
+.dim-chart-bar{height:100%;border-radius:3px;transition:width .3s}
+.dim-chart-bar.target{background:#555}
+.dim-chart-bar.actual-ok{background:#4ecdc4}
+.dim-chart-bar.actual-under{background:#ffd93d}
+.dim-chart-bar.actual-over{background:#6c9fff}
+.dim-chart-tag{font-size:.7em;min-width:36px;color:#888}
+.dim-chart-val{font-size:.78em;min-width:50px;color:#aaa;font-weight:600}
+.dim-chart-legend{display:flex;gap:16px;margin-top:8px;justify-content:center}
+.dim-chart-legend span{font-size:.75em;color:#888;display:flex;align-items:center;gap:4px}
+.dim-chart-legend span::before{content:'';display:inline-block;width:10px;height:10px;border-radius:2px}
 
 /* Turn chart */
 .chart-wrap{margin:16px 0;padding:20px;background:#1a1d25;border:1px solid #2a2d35;border-radius:8px}
@@ -306,31 +315,41 @@ function rvDash(t){
   h+='</table>';
 
   if(t.crossDims?.length){
+    const totalSamples=ds.completed||1;
     h+='<div class="section-title">횡단차원 매트릭스</div>';
-    t.crossDims.forEach(d=>{const cls=d.actual===0?'under':Math.abs(d.actual-d.target)<=3?'ok':d.actual<d.target?'under':'over';const df=d.actual-d.target;
-      h+=`<div class="dim-row"><span class="dim-label">${d.name}</span><div class="dim-bar-wrap"><div class="dim-bar ${cls}" style="width:${d.actual}%"></div><div class="dim-target" style="left:${d.target}%"></div></div><span class="dim-pct">${d.actual}% (목표 ${d.target}%, ${df>0?'+':''}${df})</span></div>`;});
-    // Turn distribution chart
+    // Target vs Actual 비교 차트
+    h+='<div class="dim-chart-wrap">';
+    t.crossDims.forEach(d=>{
+      const actualCount=Math.round(d.actual*totalSamples/100);
+      const targetCount=Math.round(d.target*totalSamples/100);
+      const cls=d.actual===0?'actual-under':Math.abs(d.actual-d.target)<=3?'actual-ok':d.actual<d.target?'actual-under':'actual-over';
+      const maxPct=Math.max(d.target,d.actual,1);
+      h+=`<div class="dim-chart-row"><span class="dim-chart-label">${d.name}</span><div class="dim-chart-bars">`;
+      h+=`<div class="dim-chart-bar-row"><span class="dim-chart-tag">목표</span><div class="dim-chart-bar-bg"><div class="dim-chart-bar target" style="width:${d.target/maxPct*100}%"></div></div><span class="dim-chart-val">${d.target}% (${targetCount}건)</span></div>`;
+      h+=`<div class="dim-chart-bar-row"><span class="dim-chart-tag">실제</span><div class="dim-chart-bar-bg"><div class="dim-chart-bar ${cls}" style="width:${d.actual/maxPct*100}%"></div></div><span class="dim-chart-val">${d.actual}% (${actualCount}건)</span></div>`;
+      h+=`</div></div>`;});
+    h+='<div class="dim-chart-legend"><span style="color:#555">&#9632; 목표</span><span style="color:#4ecdc4">&#9632; 달성</span><span style="color:#ffd93d">&#9632; 미달</span><span style="color:#6c9fff">&#9632; 초과</span></div>';
+    h+='</div>';
+
+    // 턴 수 분포 차트
     const allT=new Set();t.crossDims.forEach(d=>Object.keys(d.turnDist||{}).forEach(k=>allT.add(+k)));
     const turns=[...allT].sort((a,b)=>a-b);
     if(turns.length){
       const maxV=Math.max(...t.crossDims.flatMap(d=>Object.values(d.turnDist||{})),1);
-      h+='<div class="chart-wrap"><div class="chart-title">횡단차원별 턴 수 분포</div>';
+      h+='<div class="chart-wrap"><div class="chart-title">횡단차원별 턴 수 분포 (X: 턴 수 / Y: 수량)</div>';
       h+='<div class="chart-container">';
-      // Y축
       h+='<div class="chart-yaxis">';
       for(let yi=4;yi>=0;yi--) h+=`<span>${Math.round(maxV*yi/4)}</span>`;
       h+='</div>';
-      // 바 차트
       h+='<div class="chart">';
       turns.forEach(tn=>{h+='<div class="chart-col"><div class="chart-group">';
-        t.crossDims.forEach((d,i)=>{const v=(d.turnDist||{})[tn]||0;const hp=Math.max(Math.round(v/maxV*100),v?3:0);
+        t.crossDims.forEach((d,i)=>{const v=(d.turnDist||{})[tn]||0;const hp=Math.max(Math.round(v/maxV*100),v?5:0);
           h+=`<div class="chart-bar" style="height:${hp}%;background:${DIM_COLORS[i%DIM_COLORS.length]}" title="${d.name}: ${v}건"></div>`;});
         h+=`</div><div class="chart-xlabel">${tn}턴</div></div>`;});
       h+='</div></div>';
-      // 범례
       h+='<div class="chart-legend">';
-      t.crossDims.forEach((d,i)=>{const tot=Object.values(d.turnDist||{}).reduce((a,v)=>a+v,0);
-        h+=`<span class="chart-legend-item"><span class="chart-legend-dot" style="background:${DIM_COLORS[i%DIM_COLORS.length]}"></span>${d.name} (${tot}건)</span>`;});
+      t.crossDims.forEach((d,i)=>{const tot=Object.values(d.turnDist||{}).reduce((a,v)=>a+v,0);const pctOfTotal=totalSamples?Math.round(tot/totalSamples*100):0;
+        h+=`<span class="chart-legend-item"><span class="chart-legend-dot" style="background:${DIM_COLORS[i%DIM_COLORS.length]}"></span>${d.name} ${tot}건 (${pctOfTotal}%)</span>`;});
       h+='</div></div>';}}
 
   // 분포 차트
