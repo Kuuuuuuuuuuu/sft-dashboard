@@ -187,16 +187,17 @@ async function loadFromSheets(){
   const sr=await Promise.allSettled(TASK_IDS.map(id=>fetch('data/summary_'+id+'.json').then(r=>r.ok?r.json():null)));
   sr.forEach(r=>{if(r.status==='fulfilled'&&r.value)samplesMap[r.value.id]=r.value.samples||[];});
 
-  TASKS=tasksR.map(row=>{
+  TASKS=tasksR.filter(row=>TASK_IDS.includes(row.id)).map(row=>{
     const id=row.id;
+    const dedup=(arr,key)=>[...new Map(arr.map(x=>[x[key],x])).values()];
     return {
       id, name:row.name||'', desc:row.desc||'', status:row.status||'wait',
       info:{tier:+row.tier||0,target:+row.target||0,minimum:+row.minimum||0,lang_ratio:row.lang_ratio||'',cot_ratio:row.cot_ratio||''},
-      seeds:seedsR.filter(s=>s.task_id===id).map(s=>({name:s.name,category:s.category,usage:s.usage,contamination:s.contamination||'-'})),
+      seeds:dedup(seedsR.filter(s=>s.task_id===id),'name').map(s=>({name:s.name,category:s.category,usage:s.usage,contamination:s.contamination||'-'})),
       crossDims:dimsR.filter(d=>d.task_id===id).map(d=>({name:d.name,target:+d.target||0,actual:+d.actual||0,turnDist:{}})),
       dataStats:{completed:+row.completed||0,pass_rate:+row.pass_rate||0,avg_turns:+row.avg_turns||0,
         lang:row.lang_ratio?parseLangRatio(row.lang_ratio):{},cot:row.cot_ratio?parseCotRatio(row.cot_ratio):{},domains:[]},
-      pipeline:pipeR.filter(p=>p.task_id===id).map(p=>({phase:p.phase,name:p.name,detail:(p.detail||'').replace(/\\n/g,'\n'),status:p.status||'wait'})),
+      pipeline:dedup(pipeR.filter(p=>p.task_id===id),'phase').map(p=>({phase:p.phase,name:p.name,detail:(p.detail||'').replace(/\\n/g,'\n'),status:p.status||'wait'})),
       issues:issuesR.filter(i=>i.task_id===id).map(i=>({severity:i.severity||'info',text:i.text||'',date:i.date||''})),
       samples:samplesMap[id]||[]
     };
