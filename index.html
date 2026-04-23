@@ -444,10 +444,18 @@ function rvDash(t){
 }
 
 // ── TASK PIPELINE ──
-function mkPipeline(steps){let h='<div class="pipeline">';
+function mkPipeline(steps){
+  // 상단: 단계 박스 (이름 + 상태만)
+  let h='<div class="pipeline">';
   steps.forEach((p,i)=>{if(i)h+='<div class="pipe-arrow">&rarr;</div>';
-    h+=`<div class="pipe-step p-${p.status}"><div class="step-num">${p.phase}</div><div class="step-name">${p.name}</div><div class="step-detail">${esc(p.detail)}</div><div class="step-badge">${badge(p.status)}</div></div>`;});
-  return h+'</div>';}
+    h+=`<div class="pipe-step p-${p.status}"><div class="step-num">${p.phase}</div><div class="step-name">${p.name}</div><div class="step-badge">${badge(p.status)}</div></div>`;});
+  h+='</div>';
+  // 하단: 상세 설명 테이블
+  h+='<table class="seed-table" style="margin-top:12px"><tr><th>단계</th><th>이름</th><th>상태</th><th>상세 설명</th></tr>';
+  steps.forEach(p=>{
+    h+=`<tr><td style="color:#6c9fff;font-weight:600">${p.phase}</td><td style="font-weight:600">${p.name}</td><td>${badge(p.status)}</td><td style="color:#aaa">${esc(p.detail)}</td></tr>`;});
+  h+='</table>';
+  return h;}
 function rvPipe(t){
   const dn=t.pipeline.filter(p=>p.status==='done').length;
   let h=`<div class="section-title">구축 프로세스 (${dn}/${t.pipeline.length} 완료)</div>`+mkPipeline(t.pipeline);
