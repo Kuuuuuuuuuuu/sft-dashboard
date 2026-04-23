@@ -170,6 +170,7 @@ body{font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;b
   <div class="page-desc" id="pageDesc">G4 태스크별 데이터 구축 현황</div>
   <div class="tabs">
     <div class="tab active" onclick="onTab('dashboard',this)">대시보드</div>
+    <div class="tab" onclick="onTab('seeds',this)">시드 데이터</div>
     <div class="tab" onclick="onTab('pipeline',this)">구축 프로세스</div>
     <div class="tab" onclick="onTab('samples',this)">구축 예시</div>
   </div>
@@ -278,8 +279,8 @@ function onNav(id){
 function onTab(tab,el){curTab=tab;document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');render();}
 function render(){
   const el=document.getElementById('content');
-  if(curTask==='__all__') el.innerHTML={dashboard:rvOvDash,pipeline:rvOvPipe,samples:rvOvSamples}[curTab]();
-  else{const t=TASKS.find(x=>x.id===curTask);if(!t)return;el.innerHTML={dashboard:()=>rvDash(t),pipeline:()=>rvPipe(t),samples:()=>rvSamples(t)}[curTab]();}
+  if(curTask==='__all__') el.innerHTML={dashboard:rvOvDash,seeds:rvOvSeeds,pipeline:rvOvPipe,samples:rvOvSamples}[curTab]();
+  else{const t=TASKS.find(x=>x.id===curTask);if(!t)return;el.innerHTML={dashboard:()=>rvDash(t),seeds:()=>rvSeeds(t),pipeline:()=>rvPipe(t),samples:()=>rvSamples(t)}[curTab]();}
 }
 
 function badge(s){const m={done:['완료','done'],wip:['진행중','wip'],wait:['대기','wait']};const[t,c]=m[s]||['?','wait'];return`<span class="badge ${c}">${t}</span>`;}
@@ -315,6 +316,30 @@ function rvOvDash(){
     h+=`<div class="task-card" onclick="onNav('${t.id}')"><div class="tc-header"><span class="tc-id">${t.id} · Tier ${t.info?.tier||'?'}</span>${badge(t.status)}</div><div class="tc-name">${t.name}</div><div class="tc-desc">${t.desc}</div><div class="tc-stats"><span class="tc-stat">목표 <span class="v">${num(t.info?.target)}</span></span><span class="tc-stat">최소 <span class="v">${num(t.info?.minimum)}</span></span><span class="tc-stat">언어 <span class="v">${t.info?.lang_ratio||'-'}</span></span></div><div class="tc-progress"><div class="tc-progress-label"><span>${p}%</span><span>${num(t.dataStats?.completed)}/${num(t.info?.target)}</span></div><div class="tc-progress-bar"><div class="tc-progress-fill" style="width:${p}%;background:${pColor(p)}"></div></div></div></div>`;});
   return h+'</div>';
 }
+// ── OVERVIEW — 시드 데이터 ──
+function rvOvSeeds(){
+  let h='<div class="section-title">태스크별 시드 데이터</div>';
+  TASKS.forEach(t=>{
+    h+=`<div class="section-title" style="font-size:.92em;color:#6c9fff;cursor:pointer" onclick="onNav('${t.id}')">${t.id} ${t.name}</div>`;
+    if(!t.seeds?.length){h+='<div class="empty-state" style="padding:16px">시드 데이터 없음</div>';return;}
+    h+='<table class="seed-table"><tr><th>데이터셋</th><th>분류</th><th>사용 방식</th><th>오염 위험</th></tr>';
+    t.seeds.forEach(s=>{const cc=(s.contamination==='-'||(s.contamination||'').includes('없음'))?'seed-safe':'seed-risk';
+      h+=`<tr><td style="font-weight:600">${s.name}</td><td><span class="seed-cat">${s.category}</span></td><td style="color:#aaa">${s.usage}</td><td class="${cc}">${s.contamination}</td></tr>`;});
+    h+='</table>';});
+  return h;
+}
+
+// ── TASK — 시드 데이터 ──
+function rvSeeds(t){
+  if(!t.seeds?.length) return '<div class="empty-state">시드 데이터가 없습니다.</div>';
+  let h='<div class="section-title">시드 데이터</div>';
+  h+='<table class="seed-table"><tr><th>데이터셋</th><th>분류</th><th>사용 방식</th><th>오염 위험 비고</th></tr>';
+  t.seeds.forEach(s=>{const cc=(s.contamination==='-'||(s.contamination||'').includes('없음'))?'seed-safe':'seed-risk';
+    h+=`<tr><td style="font-weight:600">${s.name}</td><td><span class="seed-cat">${s.category}</span></td><td style="color:#aaa">${s.usage}</td><td class="${cc}">${s.contamination}</td></tr>`;});
+  h+='</table>';
+  return h;
+}
+
 function rvOvPipe(){
   let h='<div class="section-title">파이프라인 진행 현황</div><table class="ov-pipe-table"><tr><th>태스크</th><th>Tier</th><th>상태</th><th>시드 구축</th><th>시드 검증</th><th>대화 생성</th><th>품질 검증</th></tr>';
   TASKS.forEach(t=>{h+=`<tr><td><strong>${t.id}</strong> ${t.name}</td><td>Tier ${t.info?.tier||'?'}</td><td>${badge(t.status)}</td>`;
