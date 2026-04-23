@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SFT 데이터 구축 통합 대시보드</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:#0f1117;color:#e0e0e0}
+.container{max-width:1280px;margin:0 auto;padding:20px}
+h1{text-align:center;padding:24px 0 6px;font-size:1.7em;color:#fff}
+.subtitle{text-align:center;color:#888;margin-bottom:24px;font-size:.9em}
+
+/* Selector */
+.selector{display:flex;justify-content:center;margin-bottom:20px}
+.selector select{background:#1a1d25;color:#e0e0e0;border:1px solid #2a2d35;border-radius:8px;padding:10px 36px 10px 14px;font-size:.95em;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236c9fff' fill='none' stroke-width='2'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;min-width:380px}
+.selector select:focus{outline:none;border-color:#6c9fff}
+
+/* Tabs */
+.tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:2px solid #2a2d35}
+.tab{padding:12px 24px;cursor:pointer;border-radius:8px 8px 0 0;background:#1a1d25;color:#888;font-weight:600;transition:all .2s}
+.tab.active{background:#2a2d35;color:#6c9fff;border-bottom:2px solid #6c9fff;margin-bottom:-2px}
+.tab:hover{color:#fff}
+
+/* Cards */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:24px}
+.stat-card{background:#1a1d25;border-radius:12px;padding:18px;text-align:center;border:1px solid #2a2d35}
+.stat-card .num{font-size:1.8em;font-weight:700;color:#6c9fff}
+.stat-card .label{color:#888;font-size:.82em;margin-top:4px}
+
+/* Info bar */
+.info-bar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;padding:14px 18px;background:#1a1d25;border:1px solid #2a2d35;border-radius:10px}
+.info-item{font-size:.85em;display:flex;gap:6px;align-items:center}
+.info-item .il{color:#888}
+.info-item .iv{color:#6c9fff;font-weight:600}
+.info-sep{width:1px;background:#2a2d35;margin:0 4px}
+
+/* Task cards */
+.task-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:16px;margin:20px 0}
+.task-card{background:#1a1d25;border:1px solid #2a2d35;border-radius:12px;padding:20px;cursor:pointer;transition:all .2s}
+.task-card:hover{border-color:#6c9fff;transform:translateY(-2px)}
+.task-card .tc-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.task-card .tc-id{font-size:.8em;color:#6c9fff;font-weight:700}
+.task-card .tc-name{font-size:1.05em;font-weight:600;color:#fff;margin-bottom:4px}
+.task-card .tc-desc{font-size:.82em;color:#888;margin-bottom:12px;line-height:1.5}
+.task-card .tc-stats{display:flex;gap:14px;flex-wrap:wrap}
+.task-card .tc-stat{font-size:.82em}
+.task-card .tc-stat .v{color:#6c9fff;font-weight:600}
+.tc-progress{margin-top:12px}
+.tc-progress-bar{height:6px;background:#2a2d35;border-radius:3px;overflow:hidden;margin-top:4px}
+.tc-progress-fill{height:100%;border-radius:3px;transition:width .3s}
+.tc-progress-label{font-size:.75em;color:#888;display:flex;justify-content:space-between}
+.badge{font-size:.72em;padding:3px 10px;border-radius:10px;font-weight:600}
+.badge.done{background:#1a332a;color:#4ecdc4}
+.badge.wip{background:#2a2518;color:#ffd93d}
+.badge.wait{background:#1a1d25;color:#666;border:1px solid #2a2d35}
+
+/* Seed table */
+.seed-table{width:100%;border-collapse:collapse;margin:12px 0}
+.seed-table th{background:#12141a;padding:10px 14px;text-align:left;font-size:.82em;color:#6c9fff;border-bottom:2px solid #2a2d35}
+.seed-table td{padding:10px 14px;border-bottom:1px solid #1a1d25;font-size:.84em;line-height:1.5}
+.seed-table tr:hover{background:#1a1d25}
+.seed-cat{color:#4ecdc4;font-size:.78em;font-weight:600}
+.seed-safe{color:#4ecdc4;font-size:.82em}
+.seed-risk{color:#ffd93d;font-size:.82em}
+
+/* Cross-cutting dims */
+.dim-row{display:flex;align-items:center;gap:12px;margin:8px 0;font-size:.85em}
+.dim-label{min-width:120px;color:#ccc}
+.dim-bar-wrap{flex:1;height:22px;background:#12141a;border-radius:4px;position:relative;overflow:hidden}
+.dim-bar{height:100%;border-radius:4px;transition:width .3s}
+.dim-bar.ok{background:linear-gradient(90deg,#2a5a4a,#4ecdc4)}
+.dim-bar.under{background:linear-gradient(90deg,#5a3a1a,#ffd93d)}
+.dim-bar.over{background:linear-gradient(90deg,#2a3a5a,#6c9fff)}
+.dim-target{position:absolute;top:0;bottom:0;width:2px;background:#fff;opacity:.5}
+.dim-pct{min-width:110px;text-align:right;font-size:.82em;color:#888}
+
+/* Distribution */
+.dist-row{margin:16px 0}
+.dist-label{font-size:.85em;color:#ccc;margin-bottom:6px}
+.dist-bar{display:flex;height:24px;border-radius:6px;overflow:hidden}
+.dist-seg{display:flex;align-items:center;justify-content:center;font-size:.72em;font-weight:600;transition:width .3s}
+.domain-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px;margin:12px 0}
+.domain-chip{background:#12141a;border:1px solid #2a2d35;border-radius:6px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;font-size:.82em}
+.domain-chip .dc-n{color:#ccc}
+.domain-chip .dc-v{color:#6c9fff;font-weight:600}
+
+/* Pipeline */
+.pipeline{display:flex;align-items:center;gap:8px;margin:20px 0;overflow-x:auto;padding:10px 0}
+.pipe-step{background:#1a1d25;border:2px solid #2a2d35;border-radius:10px;padding:14px 18px;min-width:155px;text-align:center;flex-shrink:0;transition:all .2s}
+.pipe-step.p-done{border-color:#4ecdc4}
+.pipe-step.p-wip{border-color:#ffd93d}
+.pipe-step.p-wait{border-color:#2a2d35}
+.pipe-step .step-num{font-size:.72em;color:#6c9fff;font-weight:700}
+.pipe-step .step-name{font-size:.88em;font-weight:600;margin:4px 0;color:#fff}
+.pipe-step .step-detail{font-size:.72em;color:#888;line-height:1.5}
+.pipe-step .step-badge{margin-top:8px}
+.pipe-arrow{color:#444;font-size:1.2em;flex-shrink:0}
+
+/* Overview pipeline table */
+.ov-pipe-table{width:100%;border-collapse:collapse;margin:20px 0}
+.ov-pipe-table th{background:#1a1d25;padding:10px 14px;text-align:left;font-size:.85em;color:#6c9fff;border-bottom:2px solid #2a2d35}
+.ov-pipe-table td{padding:12px 14px;border-bottom:1px solid #1a1d25;font-size:.85em}
+.ov-pipe-table tr:hover{background:#1a1d25}
+.ov-pipe-table .steps{display:flex;gap:4px;flex-wrap:wrap}
+.mini-step{border-radius:4px;padding:2px 8px;font-size:.78em}
+.mini-step.ms-done{background:#1a332a;color:#4ecdc4}
+.mini-step.ms-wip{background:#2a2518;color:#ffd93d}
+.mini-step.ms-wait{background:#12141a;color:#555;border:1px solid #2a2d35}
+
+/* Issues */
+.issue-list{margin:12px 0}
+.issue-item{display:flex;gap:12px;align-items:flex-start;padding:12px 16px;background:#1a1d25;border:1px solid #2a2d35;border-radius:8px;margin-bottom:8px;font-size:.85em}
+.issue-sev{font-size:.72em;padding:2px 8px;border-radius:4px;font-weight:600;flex-shrink:0;margin-top:1px}
+.issue-sev.error{background:#3a1a1a;color:#ff6b6b}
+.issue-sev.warn{background:#2a2518;color:#ffd93d}
+.issue-sev.info{background:#1a2535;color:#6c9fff}
+.issue-text{flex:1;line-height:1.5}
+.issue-date{color:#555;font-size:.78em;flex-shrink:0}
+
+/* Sample viewer */
+.sample-selector{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.sample-btn{padding:10px 18px;border-radius:8px;border:1px solid #2a2d35;background:#1a1d25;color:#e0e0e0;cursor:pointer;font-size:.85em;transition:all .2s}
+.sample-btn.active{border-color:#6c9fff;color:#6c9fff;background:#1a1d2f}
+.sample-btn:hover{border-color:#6c9fff}
+.meta-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.meta-tag{background:#1a1d25;border:1px solid #2a2d35;border-radius:6px;padding:5px 10px;font-size:.78em}
+.meta-tag.accent{border-color:#6c9fff;color:#6c9fff}
+.meta-tag.teal{border-color:#4ecdc4;color:#4ecdc4}
+.meta-tag.coral{border-color:#ff6b6b;color:#ff6b6b}
+.meta-tag.yellow{border-color:#ffd93d;color:#ffd93d}
+.chat-area{background:#1a1d25;border-radius:12px;padding:20px;max-height:600px;overflow-y:auto}
+.msg{margin-bottom:16px}
+.msg.system{background:#12141a;border-radius:8px;padding:12px;font-size:.8em;color:#666;max-height:80px;overflow:hidden;cursor:pointer;transition:max-height .3s}
+.msg.system.expanded{max-height:3000px}
+.msg.system::after{content:'(클릭하여 펼치기)';display:block;color:#444;font-size:.78em;margin-top:4px}
+.msg.system.expanded::after{content:'(클릭하여 접기)'}
+.msg .role{font-size:.72em;font-weight:700;margin-bottom:4px}
+.msg .role.user-role{color:#4ecdc4}
+.msg .role.asst-role{color:#ff6b6b}
+.msg .content{line-height:1.7;font-size:.88em;white-space:pre-wrap}
+.msg .think-block{background:#0a0c10;border-left:3px solid #6c9fff;padding:8px 12px;margin-bottom:8px;border-radius:0 6px 6px 0;font-size:.8em;color:#8899aa}
+
+.section-title{font-size:1.05em;font-weight:700;margin:24px 0 12px;color:#fff;padding-bottom:8px;border-bottom:1px solid #2a2d35}
+.empty-state{text-align:center;color:#555;padding:60px 20px;font-size:.95em}
+.footer{text-align:center;color:#444;font-size:.72em;margin-top:40px;padding:20px 0;border-top:1px solid #1a1d25}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>SFT 데이터 구축 통합 대시보드</h1>
+<p class="subtitle">G4 태스크별 데이터 구축 현황 및 샘플 뷰어</p>
+
+<div class="selector">
+  <select id="taskSelect" onchange="onSelect(this.value)">
+    <option value="__all__">전체 요약</option>
+  </select>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="dashboard" onclick="onTab('dashboard',this)">대시보드</div>
+  <div class="tab" data-tab="pipeline" onclick="onTab('pipeline',this)">구축 프로세스</div>
+  <div class="tab" data-tab="samples" onclick="onTab('samples',this)">구축 예시</div>
+</div>
+
+<div id="content"></div>
+<div class="footer">SFT Data Construction Dashboard</div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+//  DATA — 태스크 수행자 summary 기반
+// ══════════════════════════════════════════════════════════════
+const TASKS = [
+  // ──────────── G4-1 도메인 전문가 롤플레이 ────────────
+  {
+    id: "G4-1",
+    name: "도메인 전문가 롤플레이",
+    desc: "30개 도메인 전문가 페르소나 기반, 도메인 지식 코퍼스를 활용한 전문 상담 대화",
+    status: "wip",
+    info: { tier:2, target:3500, minimum:1000, lang_ratio:"EN:KO = 5:5", cot_ratio:"think 30% / no_think 70%" },
+    seeds: [
+      { name:"전문가 페르소나 풀", category:"D (Synthetic)", usage:"자체 생성 — 의사, 변호사, 엔지니어, 교수, 셰프, 금융 분석가, 심리상담사, 교사 등 20~30개 역할", contamination:"오염 위험 없음" },
+      { name:"도메인 지식 레퍼런스", category:"D (Synthetic)", usage:"공신력 있는 공개 자료(의학 가이드라인, 법령, 기술 표준 문서 등)를 지식 근거로만 참조하고 대화 자체는 자체 생성", contamination:"문서 원문을 시드로 사용하지 않으므로 오염 없음" }
+    ],
+    crossDims: [
+      {name:"멀티턴 변형",   target:40, actual:42},
+      {name:"장문맥",        target:20, actual:18},
+      {name:"부정적 지시",    target:25, actual:26},
+      {name:"출력 형식 제어", target:15, actual:14}
+    ],
+    dataStats: {
+      completed:100, pass_rate:85, avg_turns:12.4,
+      lang:{KO:52,EN:48}, cot:{think:30,no_think:70},
+      domains:[{name:"내과학",count:12},{name:"외과학",count:10},{name:"법학",count:10},{name:"경제학",count:9},{name:"인공지능",count:9},{name:"심리학",count:8},{name:"건축학",count:8},{name:"기계공학",count:7},{name:"교육학",count:7},{name:"약학",count:6},{name:"기타",count:14}]
+    },
+    pipeline: [
+      {phase:"Phase 1", name:"코퍼스 확보",     detail:"AI Hub 논문 18만건\nPMC/arXiv EN",       status:"done"},
+      {phase:"Phase 2", name:"30개 도메인 선별", detail:"500자+ 필터\n사건 사실관계 제거",        status:"done"},
+      {phase:"Phase 3", name:"GPT 품질 루프",    detail:"전수 통과까지 반복\n탈락→대체→재평가",   status:"done"},
+      {phase:"Phase 4", name:"최종 조립",        detail:"KO 130 + EN 130\nseed_pool 배정",       status:"done"},
+      {phase:"Phase 5", name:"대화 생성",        detail:"Gemma4 31B-it\nthink→no_think 후처리",  status:"wip"}
+    ],
+    issues: [
+      {severity:"warn",  text:"Gemma4 truncation — 긴 답변(15턴+)에서 잘림 발생, 재생성 retry로 대응 중", date:"2026-04-22"},
+      {severity:"info",  text:"Pilot 100건 완료, 통과율 85%. Full 진입 전 가이드라인 확정 필요",           date:"2026-04-23"},
+      {severity:"error", text:"EN 코퍼스 일부 도메인(건축, 교육) 레퍼런스 부족 — 추가 확보 필요",          date:"2026-04-21"}
+    ],
+    samples: [
+      {
+        label: "내과학 전문의 / think / KO",
+        tags: [{text:"내과학",style:"yellow"},{text:"think",style:"teal"},{text:"멀티턴",style:"yellow"},{text:"KO",style:"accent"}],
+        messages: [
+          {role:"system", content:"당신은 내과 전문의입니다.\n\n[상담 범위]\n- 내과 질환 상담, 감별진단 설명, 약물 치료 안내\n\n[금지사항]\n- 확정 진단, 처방전 발행\n\n[참고 지식]\n한국보건사회연구원의 발표에 의하면 우리나라 청소년의 흡연율은 지난 8년간 계속 증가하고 있으며..."},
+          {role:"user", content:"안녕하세요 선생님, 제가 요즘 기침이 2주째 계속되고 있는데 가래도 좀 나오고 그래요."},
+          {role:"assistant", content:"<think>환자가 2주간 지속되는 기침과 가래를 호소. 감별 진단으로 급성 기관지염, 부비동염 후비루, 위식도역류, 천식 등 고려. 흡연력 확인 필요.</think>\n\n안녕하세요. 2주간 지속되는 기침과 가래로 걱정이 많으시겠습니다.\n\n우선 몇 가지 여쭤볼게요:\n1. 흡연을 하고 계신가요?\n2. 가래 색깔은 어떤가요?\n3. 발열이나 오한이 있으셨나요?"},
+          {role:"user", content:"담배는 안 피우고요, 가래는 좀 노란색이에요. 열은 없었는데 콧물이 좀 있었어요."},
+          {role:"assistant", content:"<think>비흡연자, 황색 가래, 무열, 비염 증상 동반. 후비루 증후군이나 부비동염 가능성이 높다.</think>\n\n말씀하신 증상을 종합하면, 콧물과 함께 노란 가래가 나온다는 점에서 후비루 증후군이나 부비동염 가능성을 먼저 생각해 볼 수 있습니다.\n\n다행히 발열이 없고 비흡연자이시니 심각한 폐 질환 가능성은 낮아 보입니다."}
+        ]
+      },
+      {
+        label: "AI 엔지니어 / no_think / EN",
+        tags: [{text:"인공지능",style:"yellow"},{text:"no_think",style:"coral"},{text:"출력 형식",style:"yellow"},{text:"EN",style:"accent"}],
+        messages: [
+          {role:"system", content:"You are an AI Engineer.\n\n[Scope] ML architecture consulting, model training guidance\n[Must NOT do] Write production code, guarantee performance metrics"},
+          {role:"user", content:"I need to fine-tune a language model for Korean medical QA. We have about 50k examples."},
+          {role:"assistant", content:"For Korean medical QA with 50k examples:\n\n**Model Selection**\n- Korean-optimized base (SOLAR, EXAONE) over multilingual\n- 7B-13B parameter range\n\n**Data Strategy**\n- Split 80/10/10, quality > quantity\n\n**Training**\n- LoRA/QLoRA for efficiency\n- LR: 1e-4 ~ 2e-5\n\nWant me to dive deeper into any area?"}
+        ]
+      }
+    ]
+  },
+
+  // ──────────── G4-2 동적 메모리 결합 ────────────
+  {
+    id: "G4-2",
+    name: "동적 메모리 결합",
+    desc: "이전 대화 이력과 사용자 프로필을 동적으로 결합하여 맥락 연속성을 유지하는 대화",
+    status: "wait",
+    info: { tier:2, target:3500, minimum:1000, lang_ratio:"EN:KO = 5:5", cot_ratio:"think 50% / no_think 50%" },
+    seeds: [
+      { name:"사용자 프로필 풀", category:"D (Synthetic)", usage:"이름·직업·선호·이력 자체 생성", contamination:"실제 인물 정보 사용 금지" },
+      { name:"대화 이력 카탈로그", category:"D (Synthetic)", usage:"이전 대화에서 발견된 정보 자체 생성", contamination:"-" }
+    ],
+    crossDims: [],
+    dataStats: { completed:0, pass_rate:0, avg_turns:0, lang:{EN:50,KO:50}, cot:{think:50,no_think:50}, domains:[] },
+    pipeline: [
+      {phase:"Phase 1", name:"프로필 풀 구축",   detail:"인구통계 기반 프로필\n직업/선호/이력 조합", status:"wait"},
+      {phase:"Phase 2", name:"대화 이력 생성",   detail:"세션별 이력 카탈로그\n맥락 정보 태깅",      status:"wait"},
+      {phase:"Phase 3", name:"대화 생성",        detail:"이력+프로필 결합\n맥락 연속성 검증",       status:"wait"},
+      {phase:"Phase 4", name:"품질 검증",        detail:"맥락 일관성 평가\n메모리 활용도 검증",     status:"wait"}
+    ],
+    issues: [],
+    samples: []
+  },
+
+  // ──────────── G4-3 감정 벡터·서사성·주체성 ────────────
+  {
+    id: "G4-3",
+    name: "감정 벡터·서사성·주체성",
+    desc: "감정 표현의 세밀한 벡터 변화, 서사적 흐름, 주체적 의사결정을 포함하는 대화",
+    status: "wait",
+    info: { tier:3, target:2500, minimum:500, lang_ratio:"EN:KO = 4:6", cot_ratio:"think 30% / no_think 70%" },
+    seeds: [
+      { name:"감정 시나리오 카탈로그", category:"D (Synthetic)", usage:"좌절·불안·기쁨·분노 상황 자체 생성", contamination:"-" },
+      { name:"한국어 감정 표현 코퍼스", category:"D (Synthetic)", usage:"\"힘들다\", \"답답하다\" 등 한국어 고유 표현 자체 정리", contamination:"-" }
+    ],
+    crossDims: [],
+    dataStats: { completed:0, pass_rate:0, avg_turns:0, lang:{EN:40,KO:60}, cot:{think:30,no_think:70}, domains:[] },
+    pipeline: [
+      {phase:"Phase 1", name:"감정 카탈로그 구축", detail:"감정 벡터 분류 체계\n한국어 고유 표현 정리", status:"wait"},
+      {phase:"Phase 2", name:"시나리오 시드 생성", detail:"상황별 감정 변화 설계\n서사 구조 템플릿",    status:"wait"},
+      {phase:"Phase 3", name:"대화 생성",         detail:"감정 전이 흐름 반영\n주체적 의사결정 포함",  status:"wait"},
+      {phase:"Phase 4", name:"품질 검증",         detail:"감정 일관성/자연스러움\n서사 진행도 평가",   status:"wait"}
+    ],
+    issues: [],
+    samples: []
+  },
+
+  // ──────────── G4-4 직교 제약 검증 ────────────
+  {
+    id: "G4-4",
+    name: "직교 제약 검증",
+    desc: "서로 독립적인 다중 제약 조건을 동시에 만족시키는 정밀 수행 능력 학습 데이터",
+    status: "wait",
+    info: { tier:2, target:3500, minimum:1000, lang_ratio:"EN:KO = 5:5", cot_ratio:"think 50% / no_think 50%" },
+    seeds: [
+      { name:"페르소나 × 제약 조합 카탈로그", category:"D (Synthetic)", usage:"\"의사 + 약 이름 금지\" 등 자체 생성", contamination:"-" }
+    ],
+    crossDims: [],
+    dataStats: { completed:0, pass_rate:0, avg_turns:0, lang:{EN:50,KO:50}, cot:{think:50,no_think:50}, domains:[] },
+    pipeline: [
+      {phase:"Phase 1", name:"제약 유형 정의",    detail:"직교 제약 패턴 분류\n난이도 단계 설계",    status:"wait"},
+      {phase:"Phase 2", name:"조합 카탈로그 생성", detail:"페르소나×제약 조합\n충돌/양립 검증",      status:"wait"},
+      {phase:"Phase 3", name:"대화 생성",         detail:"다중 제약 동시 적용\n위반 감지 로직",      status:"wait"},
+      {phase:"Phase 4", name:"정확도 검증",       detail:"제약 충족 전수 검증\n위반 사례 분류",      status:"wait"}
+    ],
+    issues: [],
+    samples: []
+  },
+
+  // ──────────── G4-5 톤·스타일 스위칭 ────────────
+  {
+    id: "G4-5",
+    name: "톤·스타일 스위칭",
+    desc: "동일 내용을 다양한 톤·스타일·존댓말 체계로 전환하여 표현 다양성을 학습하는 대화",
+    status: "wait",
+    info: { tier:3, target:2500, minimum:500, lang_ratio:"EN:KO = 4:6", cot_ratio:"think 30% / no_think 70%" },
+    seeds: [
+      { name:"톤 변형 페어",             category:"D (Synthetic)", usage:"동일 내용 다중 톤 자체 생성",                              contamination:"-" },
+      { name:"한국어 존댓말 체계 샘플",    category:"D (Synthetic)", usage:"해요체·합쇼체·반말·존댓말·사투리 뉘앙스 자체 정리",         contamination:"-" }
+    ],
+    crossDims: [],
+    dataStats: { completed:0, pass_rate:0, avg_turns:0, lang:{EN:40,KO:60}, cot:{think:30,no_think:70}, domains:[] },
+    pipeline: [
+      {phase:"Phase 1", name:"톤 체계 정의",       detail:"톤·스타일 분류 체계\n한국어 존댓말 5단계",    status:"wait"},
+      {phase:"Phase 2", name:"변형 페어 시드 생성", detail:"동일 내용 다중 톤 변환\n페어 카탈로그 구축",  status:"wait"},
+      {phase:"Phase 3", name:"대화 생성",          detail:"톤 전환 요청 포함\n스타일 일관성 유지",       status:"wait"},
+      {phase:"Phase 4", name:"품질 검증",          detail:"톤 정확도 평가\n뉘앙스 자연스러움 검증",     status:"wait"}
+    ],
+    issues: [],
+    samples: []
+  },
+
+  // ──────────── G4-6 시스템 프롬프트 페르소나 준수 ────────────
+  {
+    id: "G4-6",
+    name: "시스템 프롬프트 페르소나 준수",
+    desc: "시스템 프롬프트로 정의된 페르소나를 유혹/이탈 시도에도 일관되게 유지하는 대화",
+    status: "wait",
+    info: { tier:1, target:6000, minimum:2000, lang_ratio:"EN:KO = 5:5", cot_ratio:"think 50% / no_think 50%" },
+    seeds: [
+      { name:"페르소나 시스템 프롬프트 풀", category:"D (Synthetic)", usage:"고객지원·튜터·코딩·건강 등 자체 생성",  contamination:"-" },
+      { name:"유혹 시나리오",              category:"D (Synthetic)", usage:"페르소나 이탈 유도 요청 자체 생성",     contamination:"-" }
+    ],
+    crossDims: [],
+    dataStats: { completed:0, pass_rate:0, avg_turns:0, lang:{EN:50,KO:50}, cot:{think:50,no_think:50}, domains:[] },
+    pipeline: [
+      {phase:"Phase 1", name:"페르소나 풀 구축",  detail:"역할별 시스템 프롬프트\ncan_do/must_not_do",  status:"wait"},
+      {phase:"Phase 2", name:"유혹 시나리오 생성", detail:"이탈 유도 패턴 설계\n난이도별 분류",         status:"wait"},
+      {phase:"Phase 3", name:"대화 생성",         detail:"정상 대화 + 유혹 삽입\n페르소나 유지 응답",   status:"wait"},
+      {phase:"Phase 4", name:"준수도 검증",       detail:"페르소나 이탈 여부\n일관성 점수 평가",       status:"wait"}
+    ],
+    issues: [],
+    samples: []
+  }
+];
+
+
+// ══════════════════════════════════════════════════════════════
+//  STATE & INIT
+// ══════════════════════════════════════════════════════════════
+let curTask = '__all__', curTab = 'dashboard';
+
+(function init() {
+  const sel = document.getElementById('taskSelect');
+  TASKS.forEach(t => {
+    const o = document.createElement('option');
+    o.value = t.id; o.textContent = `${t.id} ${t.name}`;
+    sel.appendChild(o);
+  });
+  render();
+})();
+
+function onSelect(v) { curTask = v; render(); }
+function onTab(tab, el) {
+  curTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  RENDER ROUTER
+// ══════════════════════════════════════════════════════════════
+function render() {
+  const el = document.getElementById('content');
+  if (curTask === '__all__') {
+    el.innerHTML = {dashboard:rvOvDash, pipeline:rvOvPipe, samples:rvOvSamples}[curTab]();
+  } else {
+    const t = TASKS.find(x => x.id === curTask);
+    if (!t) { el.innerHTML = '<div class="empty-state">Not found</div>'; return; }
+    el.innerHTML = {dashboard:()=>rvDash(t), pipeline:()=>rvPipe(t), samples:()=>rvSamples(t)}[curTab]();
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════════════════════
+function badge(s) { const m={done:['완료','done'],wip:['진행중','wip'],wait:['대기','wait']}; const[t,c]=m[s]||['?','wait']; return `<span class="badge ${c}">${t}</span>`; }
+function pct(n,d) { return d ? Math.round(n/d*100) : 0; }
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
+function pColor(p) { return p>=80?'#4ecdc4':p>=40?'#ffd93d':'#ff6b6b'; }
+function num(n) { return (n||0).toLocaleString(); }
+
+// ══════════════════════════════════════════════════════════════
+//  OVERVIEW — 전체 요약
+// ══════════════════════════════════════════════════════════════
+function rvOvDash() {
+  const tTarget = TASKS.reduce((a,t)=>a+(t.info?.target||0),0);
+  const tMin    = TASKS.reduce((a,t)=>a+(t.info?.minimum||0),0);
+  const tDone   = TASKS.reduce((a,t)=>a+(t.dataStats?.completed||0),0);
+  const nDone=TASKS.filter(t=>t.status==='done').length, nWip=TASKS.filter(t=>t.status==='wip').length, nWait=TASKS.filter(t=>t.status==='wait').length;
+  const p = pct(tDone, tTarget);
+
+  let h = `<div class="info-bar">
+    <div class="info-item"><span class="il">태스크</span><span class="iv">${TASKS.length}개</span></div><div class="info-sep"></div>
+    <div class="info-item"><span class="il">전체 목표</span><span class="iv">${num(tTarget)}</span></div><div class="info-sep"></div>
+    <div class="info-item"><span class="il">전체 최소</span><span class="iv">${num(tMin)}</span></div><div class="info-sep"></div>
+    <div class="info-item"><span class="il">전체 완료</span><span class="iv">${num(tDone)} (${p}%)</span></div><div class="info-sep"></div>
+    <div class="info-item"><span class="il">상태</span><span class="iv">${nDone}완료 / ${nWip}진행 / ${nWait}대기</span></div>
+  </div>`;
+
+  h += `<div class="stats-grid">
+    <div class="stat-card"><div class="num">${num(tTarget)}</div><div class="label">전체 목표 샘플</div></div>
+    <div class="stat-card"><div class="num">${num(tMin)}</div><div class="label">전체 최소 샘플</div></div>
+    <div class="stat-card"><div class="num">${num(tDone)}</div><div class="label">현재 완료</div></div>
+    <div class="stat-card"><div class="num">${p}%</div><div class="label">전체 진행률</div></div>
+  </div>`;
+
+  h += '<div class="section-title">태스크 목록</div><div class="task-grid">';
+  TASKS.forEach(t => {
+    const tp = pct(t.dataStats?.completed||0, t.info?.target||1);
+    h += `<div class="task-card" onclick="document.getElementById('taskSelect').value='${t.id}';onSelect('${t.id}')">
+      <div class="tc-header"><span class="tc-id">${t.id} · Tier ${t.info?.tier||'?'}</span>${badge(t.status)}</div>
+      <div class="tc-name">${t.name}</div>
+      <div class="tc-desc">${t.desc}</div>
+      <div class="tc-stats">
+        <span class="tc-stat">목표 <span class="v">${num(t.info?.target)}</span></span>
+        <span class="tc-stat">최소 <span class="v">${num(t.info?.minimum)}</span></span>
+        <span class="tc-stat">언어 <span class="v">${t.info?.lang_ratio||'-'}</span></span>
+        <span class="tc-stat">CoT <span class="v">${t.info?.cot_ratio||'-'}</span></span>
+      </div>
+      <div class="tc-progress">
+        <div class="tc-progress-label"><span>${tp}%</span><span>${num(t.dataStats?.completed)} / ${num(t.info?.target)}</span></div>
+        <div class="tc-progress-bar"><div class="tc-progress-fill" style="width:${tp}%;background:${pColor(tp)}"></div></div>
+      </div>
+    </div>`;
+  });
+  h += '</div>';
+  return h;
+}
+
+function rvOvPipe() {
+  let h = '<div class="section-title">태스크별 파이프라인 진행 현황</div>';
+  h += '<table class="ov-pipe-table"><tr><th>태스크</th><th>Tier</th><th>상태</th><th>진행</th><th>파이프라인 단계</th></tr>';
+  TASKS.forEach(t => {
+    const dn = t.pipeline.filter(p=>p.status==='done').length;
+    const steps = t.pipeline.map(p=>`<span class="mini-step ms-${p.status}">${p.name}</span>`).join('');
+    h += `<tr><td><strong>${t.id}</strong> ${t.name}</td><td>Tier ${t.info?.tier||'?'}</td><td>${badge(t.status)}</td><td>${dn}/${t.pipeline.length}</td><td><div class="steps">${steps}</div></td></tr>`;
+  });
+  h += '</table>';
+
+  TASKS.forEach(t => {
+    h += `<div class="section-title">${t.id} ${t.name}</div>`;
+    h += mkPipeline(t.pipeline);
+  });
+  return h;
+}
+
+function rvOvSamples() {
+  let h = '<div class="section-title">태스크별 대표 샘플</div>';
+  TASKS.forEach(t => {
+    h += `<div class="section-title" style="font-size:.95em;color:#6c9fff;cursor:pointer" onclick="document.getElementById('taskSelect').value='${t.id}';onSelect('${t.id}')">${t.id} ${t.name} &rarr;</div>`;
+    if (!t.samples?.length) { h += '<div class="empty-state" style="padding:24px">아직 샘플이 없습니다.</div>'; return; }
+    h += mkChat(t.samples[0], true);
+  });
+  return h;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  TASK — 대시보드
+// ══════════════════════════════════════════════════════════════
+function rvDash(t) {
+  const inf = t.info||{}, ds = t.dataStats||{};
+  const p = pct(ds.completed||0, inf.target||1);
+
+  // 기본 정보 바
+  let h = `<div class="info-bar">
+    <div class="info-item"><span class="il">Tier</span><span class="iv">${inf.tier||'?'}</span></div><div class="info-sep"></div>
+    <div class="info-item"><span class="il">목표</span><span class="iv">${num(inf.target)}</span></div><div class="info-sep"></div>
+    <div class="info-item"><span class="il">최소</span><span class="iv">${num(inf.minimum)}</span></div><div class="info-sep"></div>
+    <div class="info-item"><span class="il">언어</span><span class="iv">${inf.lang_ratio||'-'}</span></div><div class="info-sep"></div>
+    <div class="info-item"><span class="il">CoT</span><span class="iv">${inf.cot_ratio||'-'}</span></div>
+  </div>`;
+
+  // 핵심 지표
+  h += `<div class="stats-grid">
+    <div class="stat-card"><div class="num">${num(ds.completed)}</div><div class="label">완료 (${p}%)</div></div>
+    <div class="stat-card"><div class="num">${ds.pass_rate||0}%</div><div class="label">통과율</div></div>
+    <div class="stat-card"><div class="num">${ds.avg_turns||'-'}</div><div class="label">평균 턴 수</div></div>
+    <div class="stat-card"><div class="num">${t.seeds?.length||0}</div><div class="label">시드 종류</div></div>
+  </div>`;
+
+  // 시드 데이터 테이블
+  h += '<div class="section-title">시드 데이터</div>';
+  h += '<table class="seed-table"><tr><th>데이터셋</th><th>분류</th><th>사용 방식</th><th>오염 위험 비고</th></tr>';
+  (t.seeds||[]).forEach(s => {
+    const cClass = s.contamination==='-'||s.contamination.includes('없음')?'seed-safe':'seed-risk';
+    h += `<tr><td style="font-weight:600">${s.name}</td><td><span class="seed-cat">${s.category}</span></td><td style="color:#aaa">${s.usage}</td><td class="${cClass}">${s.contamination}</td></tr>`;
+  });
+  h += '</table>';
+
+  // 횡단차원 매트릭스
+  if (t.crossDims?.length) {
+    h += '<div class="section-title">횡단차원 매트릭스</div>';
+    t.crossDims.forEach(d => {
+      const cls = d.actual===0?'under':Math.abs(d.actual-d.target)<=3?'ok':d.actual<d.target?'under':'over';
+      const diff = d.actual-d.target; const ds2 = diff>0?`+${diff}`:`${diff}`;
+      h += `<div class="dim-row"><span class="dim-label">${d.name}</span><div class="dim-bar-wrap"><div class="dim-bar ${cls}" style="width:${d.actual}%"></div><div class="dim-target" style="left:${d.target}%"></div></div><span class="dim-pct">${d.actual}% (목표 ${d.target}%, ${ds2})</span></div>`;
+    });
+  }
+
+  // 분포: 언어
+  if (ds.lang && Object.keys(ds.lang).length) {
+    h += '<div class="section-title">분포</div>';
+    const lE = Object.entries(ds.lang), lT = lE.reduce((a,[,v])=>a+v,0);
+    const lC = {KO:'#4ecdc4',EN:'#ff6b6b',ko:'#4ecdc4',en:'#ff6b6b'};
+    h += '<div class="dist-row"><div class="dist-label">언어 분포</div><div class="dist-bar">';
+    lE.forEach(([k,v])=>{ h+=`<div class="dist-seg" style="width:${pct(v,lT)}%;background:${lC[k]||'#6c9fff'}">${k} ${pct(v,lT)}%</div>`; });
+    h += '</div></div>';
+
+    // CoT
+    if (ds.cot) {
+      const cE=Object.entries(ds.cot), cT=cE.reduce((a,[,v])=>a+v,0);
+      const cC={think:'#4ecdc4',no_think:'#ff6b6b'};
+      h += '<div class="dist-row"><div class="dist-label">CoT 분포</div><div class="dist-bar">';
+      cE.forEach(([k,v])=>{ h+=`<div class="dist-seg" style="width:${pct(v,cT)}%;background:${cC[k]||'#6c9fff'}">${k} ${pct(v,cT)}%</div>`; });
+      h += '</div></div>';
+    }
+
+    // 도메인
+    if (ds.domains?.length) {
+      h += '<div class="dist-row"><div class="dist-label">도메인 분포</div><div class="domain-grid">';
+      ds.domains.sort((a,b)=>b.count-a.count).forEach(d=>{ h+=`<div class="domain-chip"><span class="dc-n">${d.name}</span><span class="dc-v">${d.count}</span></div>`; });
+      h += '</div></div>';
+    }
+  }
+
+  // 이슈
+  if (t.issues?.length) {
+    h += '<div class="section-title">이슈</div><div class="issue-list">';
+    t.issues.forEach(i=>{ h+=`<div class="issue-item"><span class="issue-sev ${i.severity}">${i.severity.toUpperCase()}</span><span class="issue-text">${i.text}</span><span class="issue-date">${i.date}</span></div>`; });
+    h += '</div>';
+  }
+  return h;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  TASK — 구축 프로세스
+// ══════════════════════════════════════════════════════════════
+function mkPipeline(steps) {
+  let h = '<div class="pipeline">';
+  steps.forEach((p,i) => {
+    if (i) h += '<div class="pipe-arrow">&rarr;</div>';
+    h += `<div class="pipe-step p-${p.status}"><div class="step-num">${p.phase}</div><div class="step-name">${p.name}</div><div class="step-detail">${esc(p.detail)}</div><div class="step-badge">${badge(p.status)}</div></div>`;
+  });
+  return h + '</div>';
+}
+
+function rvPipe(t) {
+  const dn=t.pipeline.filter(p=>p.status==='done').length;
+  let h = `<div class="section-title">${t.id} ${t.name} — 구축 프로세스 (${dn}/${t.pipeline.length} 완료)</div>`;
+  h += mkPipeline(t.pipeline);
+  if (t.issues?.length) {
+    h += '<div class="section-title">이슈</div><div class="issue-list">';
+    t.issues.forEach(i=>{ h+=`<div class="issue-item"><span class="issue-sev ${i.severity}">${i.severity.toUpperCase()}</span><span class="issue-text">${i.text}</span><span class="issue-date">${i.date}</span></div>`; });
+    h += '</div>';
+  }
+  return h;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  TASK — 구축 예시
+// ══════════════════════════════════════════════════════════════
+function rvSamples(t) {
+  if (!t.samples?.length) return '<div class="empty-state">아직 구축된 샘플이 없습니다.</div>';
+  let h = '<div class="sample-selector" id="sampleSelector">';
+  t.samples.forEach((s,i)=>{ h+=`<div class="sample-btn ${i===0?'active':''}" onclick="showSample('${t.id}',${i},this)">${s.label}</div>`; });
+  h += '</div><div id="sampleView">'+mkChat(t.samples[0],true)+'</div>';
+  return h;
+}
+
+function showSample(tid,idx,el) {
+  document.querySelectorAll('.sample-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('sampleView').innerHTML = mkChat(TASKS.find(t=>t.id===tid).samples[idx],true);
+}
+
+function mkChat(sample, showTags) {
+  let h = '';
+  if (showTags && sample.tags) {
+    h += '<div class="meta-bar">';
+    sample.tags.forEach(t=>h+=`<div class="meta-tag ${t.style||''}">${t.text}</div>`);
+    h += '</div>';
+  }
+  h += '<div class="chat-area">';
+  (sample.messages||[]).forEach(m => {
+    if (m.role==='system') {
+      h += `<div class="msg system" onclick="this.classList.toggle('expanded')"><div class="role">SYSTEM</div><div class="content">${esc(m.content)}</div></div>`;
+    } else {
+      const rc=m.role==='user'?'user-role':'asst-role', rn=m.role==='user'?'USER':'ASSISTANT';
+      h += `<div class="msg"><div class="role ${rc}">${rn}</div><div class="content">${mkThink(m.content)}</div></div>`;
+    }
+  });
+  return h + '</div>';
+}
+
+function mkThink(text) {
+  if (!text) return '';
+  const parts=[]; let last=0;
+  const re=/<think>([\s\S]*?)<\/think>/g; let m;
+  while ((m=re.exec(text))!==null) {
+    if (m.index>last) parts.push(esc(text.slice(last,m.index)));
+    parts.push('<div class="think-block">'+esc(m[1])+'</div>');
+    last=re.lastIndex;
+  }
+  if (last<text.length) parts.push(esc(text.slice(last)));
+  return parts.join('');
+}
+</script>
+</body>
+</html>
