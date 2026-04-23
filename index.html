@@ -219,17 +219,10 @@ async function loadFromSheets(){
   const samplesMap={};
   for(const id of TASK_IDS){
     try{
-      const url='data/summary_'+id+'.json?t='+Date.now();
-      const r=await fetch(url);
-      console.log('[samples fetch]',id,'status:',r.status);
-      if(r.ok){
-        const d=await r.json();
-        console.log('[samples parse]',id,'keys:',Object.keys(d),'samples:',d.samples?d.samples.length:0);
-        if(d&&d.samples&&d.samples.length) samplesMap[id]=d.samples;
-      }
-    }catch(e){console.log('[samples error]',id,e);}
+      const r=await fetch('data/summary_'+id+'.json?t='+Date.now());
+      if(r.ok){const d=await r.json();if(d&&d.samples&&d.samples.length)samplesMap[id]=d.samples;}
+    }catch(e){}
   }
-  console.log('[samplesMap]',Object.keys(samplesMap),Object.values(samplesMap).map(s=>s.length));
 
   TASKS=tasksR.filter(row=>TASK_IDS.includes(row.id)).map(row=>{
     const id=row.id;
@@ -261,14 +254,9 @@ async function loadFromJSON(){
 async function loadTasks(){
   TASKS=[];
   try{
-    console.log('[load] SHEET_ID:', SHEET_ID ? 'set' : 'empty');
     if(SHEET_ID) await loadFromSheets(); else await loadFromJSON();
-    console.log('[load] TASKS:', TASKS.length, '개 로드');
-    TASKS.forEach(t=>console.log('[load]', t.id, t.name, 'samples:', (t.samples||[]).length));
   }catch(e){
-    console.error('[load] 에러:', e);
-    // Sheets 실패 시 JSON fallback
-    try{await loadFromJSON();console.log('[load] JSON fallback:', TASKS.length);}catch(e2){console.error('[load] JSON도 실패:', e2);}
+    try{await loadFromJSON();}catch(e2){}
   }
   const sb=document.getElementById('sidebar');
   let h='<div class="sb-title">SFT 데이터 구축</div>';
