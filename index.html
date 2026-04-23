@@ -319,13 +319,13 @@ function rvOvDash(){
 // ── OVERVIEW — 시드 데이터 ──
 function rvOvSeeds(){
   let h='<div class="section-title">태스크별 시드 데이터</div>';
+  h+='<table class="seed-table"><tr><th>태스크</th><th>데이터셋</th><th>분류</th><th>사용 방식</th><th>오염 위험</th></tr>';
   TASKS.forEach(t=>{
-    h+=`<div class="section-title" style="font-size:.92em;color:#6c9fff;cursor:pointer" onclick="onNav('${t.id}')">${t.id} ${t.name}</div>`;
-    if(!t.seeds?.length){h+='<div class="empty-state" style="padding:16px">시드 데이터 없음</div>';return;}
-    h+='<table class="seed-table"><tr><th>데이터셋</th><th>분류</th><th>사용 방식</th><th>오염 위험</th></tr>';
-    t.seeds.forEach(s=>{const cc=(s.contamination==='-'||(s.contamination||'').includes('없음'))?'seed-safe':'seed-risk';
-      h+=`<tr><td style="font-weight:600">${s.name}</td><td><span class="seed-cat">${s.category}</span></td><td style="color:#aaa">${s.usage}</td><td class="${cc}">${s.contamination}</td></tr>`;});
-    h+='</table>';});
+    if(!t.seeds?.length) return;
+    t.seeds.forEach((s,i)=>{const cc=(s.contamination==='-'||(s.contamination||'').includes('없음'))?'seed-safe':'seed-risk';
+      h+=`<tr><td${i===0?' style="font-weight:600;color:#6c9fff;vertical-align:top" rowspan="'+t.seeds.length+'"':''}>${i===0?t.id+' '+t.name:''}</td><td style="font-weight:600">${s.name}</td><td><span class="seed-cat">${s.category}</span></td><td style="color:#aaa">${s.usage}</td><td class="${cc}">${s.contamination}</td></tr>`;});
+  });
+  h+='</table>';
   return h;
 }
 
