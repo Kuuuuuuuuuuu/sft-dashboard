@@ -7,14 +7,18 @@
 <style>
 :root{--bg:#f5f6f8;--card:#fff;--border:#e2e5ea;--text:#111;--dim:#555;--accent:#3b82f6;--teal:#059669;--coral:#dc2626;--yellow:#d97706;--purple:#7c3aed;--card-shadow:0 1px 3px rgba(0,0,0,.08)}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--text)}
+body{font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
 
-.top-bar{background:#fff;border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;box-shadow:var(--card-shadow)}
-.top-bar h1{font-size:1.1em;font-weight:700;color:var(--text);margin-right:8px}
-.top-bar select{background:#fff;border:1px solid var(--border);border-radius:6px;padding:7px 32px 7px 10px;font-size:.88em;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%233b82f6' fill='none' stroke-width='2'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;min-width:280px}
-.top-bar select:focus{outline:none;border-color:var(--accent)}
+.sb{width:250px;background:#fff;border-right:1px solid var(--border);position:fixed;top:0;left:0;bottom:0;overflow-y:auto}
+.sb-title{padding:18px 20px;font-size:1.05em;font-weight:700;color:var(--text);border-bottom:1px solid var(--border)}
+.sb-label{padding:6px 16px;font-size:.7em;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-top:10px}
+.sb-item{padding:10px 20px;cursor:pointer;font-size:.86em;color:var(--dim);display:flex;justify-content:space-between;align-items:center;border-left:3px solid transparent;transition:all .12s}
+.sb-item:hover{background:#f0f2f5;color:#333}
+.sb-item.on{background:#eff6ff;color:var(--accent);border-left-color:var(--accent);font-weight:600}
+.sb-badge{font-size:.66em;padding:2px 7px;border-radius:8px;font-weight:600}
+.sb-badge.done{background:#d1fae5;color:#065f46}.sb-badge.wip{background:#fef3c7;color:#92400e}.sb-badge.wait{background:#f3f4f6;color:#9ca3af}
 
-.main{max-width:1100px;margin:0 auto;padding:20px 24px}
+.main{margin-left:250px;flex:1;padding:24px 30px;min-height:100vh}
 .pg-title{font-size:1.4em;font-weight:700;color:var(--text);margin-bottom:3px}
 .pg-desc{color:var(--dim);font-size:.86em;margin-bottom:18px}
 .tabs{display:flex;gap:4px;margin-bottom:18px;border-bottom:2px solid var(--border)}
@@ -116,12 +120,7 @@ body{font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;b
 </style>
 </head>
 <body>
-<div class="top-bar">
-  <h1>SFT 데이터 구축</h1>
-  <select id="sel" onchange="nav(this.value)">
-    <option value="__all__">전체 요약</option>
-  </select>
-</div>
+<nav class="sb" id="sb"></nav>
 <div class="main">
   <div class="pg-title" id="pgT">전체 요약</div>
   <div class="pg-desc" id="pgD">G4 태스크별 데이터 구축 현황</div>
@@ -135,22 +134,43 @@ body{font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;b
 </div>
 
 <script>
+const SHEET_ID='1y6OEISDUfad_NaM7Jx0kYNaxk5fSVOHUK_LVIIiEYXw';
 const TASK_IDS=['G4-1','G4-2','G4-3','G4-4','G4-5','G4-6'];
 const DC=['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899'];
 let T=[],cur='__all__',ctab='dash';
 
+function csv(t){const rows=[];let c=[],f='',q=false;
+for(let i=0;i<t.length;i++){const ch=t[i];
+if(q){if(ch==='"'&&t[i+1]==='"'){f+='"';i++;}else if(ch==='"')q=false;else f+=ch;}
 else{if(ch==='"')q=true;else if(ch===','){c.push(f.trim());f='';}else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&t[i+1]==='\n')i++;c.push(f.trim());if(c.some(v=>v))rows.push(c);c=[];f='';}else f+=ch;}}
 c.push(f.trim());if(c.some(v=>v))rows.push(c);if(!rows.length)return[];
 const h=rows[0];return rows.slice(1).map(r=>{const o={};h.forEach((k,i)=>o[k]=r[i]||'');return o;});}
+function surl(t){return`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(t)}`;}
 
-function plang(s){const m=(s||'').match(/(\d+)\s*:\s*(\d+)/);if(!m)return{};return(s||'').includes('EN:KO')?{EN:+m[1],KO:+m[2]}:{KO:+m[1],EN:+m[2]};}
-function pcot(s){const t=(s||'').match(/think\s*(\d+)/i),n=(s||'').match(/no_think\s*(\d+)/i);return{think:t?+t[1]:0,no_think:n?+n[1]:0};}
-
-// 데이터는 build_and_upload.py가 이 함수를 교체하여 인라인으로 삽입합니다
 async function load(){
   T=[];
+  try{
+    const[a,b,c,d,e,f]=await Promise.all(['tasks','seeds','pipeline','issues','crossDims','turnDist'].map(t=>fetch(surl(t)).then(r=>r.text()).catch(()=>'')));
+    const tR=csv(a),sR=csv(b),pR=csv(c),iR=csv(d),dR=csv(e),tdR=csv(f);
+    const tdM={};tdR.forEach(r=>{const id=r.task_id,dn=r.dim_name;tdM[id]=tdM[id]||{};tdM[id][dn]=tdM[id][dn]||{};tdM[id][dn][r.turns]=+r.count||0;});
+    const sm={},pm={};
+    for(const id of TASK_IDS){try{const r=await fetch('data/summary_'+id+'.json?t='+Date.now());if(r.ok){const d=await r.json();if(d?.samples?.length)sm[id]=d.samples;if(d?.prompts)pm[id]=d.prompts;}}catch(e){}}
+    const dedup=(a,k)=>[...new Map(a.map(x=>[x[k],x])).values()];
+    T=tR.filter(r=>TASK_IDS.includes(r.id)).map(r=>{const id=r.id;return{
+      id,name:r.name||'',desc:r.desc||'',status:r.status||'wait',
+      info:{tier:+r.tier||0,target:+r.target||0,minimum:+r.minimum||0,lang_ratio:r.lang_ratio||'',cot_ratio:r.cot_ratio||''},
+      seeds:dedup(sR.filter(s=>s.task_id===id),'name').map(s=>({name:s.name,category:s.category,usage:s.usage,contamination:s.contamination||'-',count:+s.count||0,sample:s.sample||''})),
+      crossDims:dR.filter(x=>x.task_id===id).map(x=>({name:x.name,target:+x.target||0,actual:+x.actual||0,turnDist:(tdM[id]||{})[x.name]||{}})),
+      dataStats:{completed:+r.completed||0,pass_rate:+r.pass_rate||0,avg_turns:+r.avg_turns||0,lang:plang(r.lang_ratio),cot:pcot(r.cot_ratio),domains:[]},
+      pipeline:dedup(pR.filter(p=>p.task_id===id),'phase').map(p=>({phase:p.phase,name:p.name,detail:(p.detail||'').replace(/\\n/g,'\n'),status:p.status||'wait'})),
+      issues:iR.filter(i=>i.task_id===id).map(i=>({severity:i.severity||'info',text:i.text||'',date:i.date||''})),
+      prompts:pm[id]||{},
+      samples:sm[id]||[]};});
+  }catch(e){console.error(e);}
   buildSb();render();
 }
+function plang(s){const m=(s||'').match(/(\d+)\s*:\s*(\d+)/);if(!m)return{};return(s||'').includes('EN:KO')?{EN:+m[1],KO:+m[2]}:{KO:+m[1],EN:+m[2]};}
+function pcot(s){const t=(s||'').match(/think\s*(\d+)/i),n=(s||'').match(/no_think\s*(\d+)/i);return{think:t?+t[1]:0,no_think:n?+n[1]:0};}
 load();
 
 function bg(s){const m={done:['완료','done'],wip:['진행중','wip'],wait:['대기','wait']};const[t,c]=m[s]||['?','wait'];return`<span class="badge ${c}">${t}</span>`;}
@@ -166,10 +186,11 @@ function donut(entries,total,colors){
 function toggleSeed(tid,idx){const el=document.getElementById('seed-'+tid+'-'+idx);if(el)el.style.display=el.style.display==='none'?'':'none';}
 
 function buildSb(){
-  const sel=document.getElementById('sel');
-  sel.innerHTML='<option value="__all__">전체 요약</option>';
-  T.forEach(t=>{const o=document.createElement('option');o.value=t.id;o.textContent=`${t.id} ${t.name}`;sel.appendChild(o);});}
-function nav(id){cur=id;
+  let h=`<div class="sb-title">SFT 데이터 구축</div><div class="sb-item on" data-id="__all__" onclick="nav('__all__')">전체 요약</div><div class="sb-label">태스크</div>`;
+  T.forEach(t=>{const bl={done:'완료',wip:'진행중',wait:'대기'}[t.status]||'?';
+    h+=`<div class="sb-item" data-id="${t.id}" onclick="nav('${t.id}')"><span>${t.id} ${t.name}</span><span class="sb-badge ${t.status}">${bl}</span></div>`;});
+  document.getElementById('sb').innerHTML=h;}
+function nav(id){cur=id;document.querySelectorAll('.sb-item').forEach(e=>e.classList.toggle('on',e.dataset.id===id));
   if(id==='__all__'){document.getElementById('pgT').textContent='전체 요약';document.getElementById('pgD').textContent='G4 태스크별 데이터 구축 현황';}
   else{const t=T.find(x=>x.id===id);document.getElementById('pgT').textContent=`${t.id} ${t.name}`;document.getElementById('pgD').textContent=t.desc;}render();}
 function tab(t,el){ctab=t;document.querySelectorAll('.tab').forEach(e=>e.classList.remove('on'));el.classList.add('on');render();}
