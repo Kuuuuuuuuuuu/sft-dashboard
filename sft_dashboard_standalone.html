@@ -134,7 +134,7 @@ body{font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;b
 </div>
 
 <script>
-const SHEET_ID='1y6OEISDUfad_NaM7Jx0kYNaxk5fSVOHUK_LVIIiEYXw';
+const SHEET_ID='';
 const TASK_IDS=['G4-1','G4-2','G4-3','G4-4','G4-5','G4-6'];
 const DC=['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899'];
 let T=[],cur='__all__',ctab='dash';
@@ -154,7 +154,6 @@ async function load(){
     const tR=csv(a),sR=csv(b),pR=csv(c),iR=csv(d),dR=csv(e),tdR=csv(f);
     const tdM={};tdR.forEach(r=>{const id=r.task_id,dn=r.dim_name;tdM[id]=tdM[id]||{};tdM[id][dn]=tdM[id][dn]||{};tdM[id][dn][r.turns]=+r.count||0;});
     const sm={},pm={};
-    for(const id of TASK_IDS){try{const r=await fetch('data/summary_'+id+'.json?t='+Date.now());if(r.ok){const d=await r.json();if(d?.samples?.length)sm[id]=d.samples;if(d?.prompts)pm[id]=d.prompts;}}catch(e){}}
     const dedup=(a,k)=>[...new Map(a.map(x=>[x[k],x])).values()];
     T=tR.filter(r=>TASK_IDS.includes(r.id)).map(r=>{const id=r.id;return{
       id,name:r.name||'',desc:r.desc||'',status:r.status||'wait',
@@ -239,7 +238,8 @@ function tDash(t){
     h+='</div>';
 
     // 턴별 분포 차트 (차원별)
-    {
+    const hasTD=t.crossDims.some(d=>Object.keys(d.turnDist||{}).length);
+    if(hasTD){
       h+='<div style="margin-top:16px;font-size:.9em;font-weight:600;color:#333;margin-bottom:10px">횡단차원별 턴 수 분포</div>';
       h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px">';
       t.crossDims.forEach((d,i)=>{
