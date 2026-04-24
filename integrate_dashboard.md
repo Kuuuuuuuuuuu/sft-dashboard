@@ -156,7 +156,16 @@ s.put("http://172.19.181.250:8888/api/contents/dashboard_data/summary_G4-1.json"
 
 ### 2단계: 결과 파일 파싱
 
-`result/` 폴더의 `.jsonl`, `.json` 파일을 Python으로 읽어서 `dataStats`, `crossDims.actual`, `crossDims.turnDist`를 집계하세요.
+프로젝트에서 결과 파일을 찾으세요. 폴더명은 프로젝트마다 다릅니다.
+
+탐색 우선순위:
+1. `result/`, `result/live/`, `results/`
+2. `output/`, `outputs/`
+3. `summary/`, `data/output/`
+4. 프로젝트 루트의 `.jsonl`, `.json` 파일
+5. 가장 최근 수정된 `.jsonl` 파일
+
+찾은 파일을 Python으로 읽어서 `dataStats`, `crossDims.actual`, `crossDims.turnDist`를 집계하세요.
 
 ### 3단계: 구축 예시 추출
 
@@ -164,7 +173,7 @@ s.put("http://172.19.181.250:8888/api/contents/dashboard_data/summary_G4-1.json"
 
 ### 4단계: JSON 저장
 
-위 스키마에 맞는 `summary_G4-{n}.json` 파일을 `result/` 폴더에 저장하세요.
+위 스키마에 맞는 `summary_G4-{n}.json` 파일을 프로젝트 루트에 저장하세요.
 
 ### 5단계: Jupyter 업로드
 
@@ -179,7 +188,7 @@ s.post("http://172.19.181.250:8888/login",
     data={"_xsrf": xsrf, "password": "mtdt2023"},
     headers={"X-XSRFToken": xsrf})
 
-content = open("result/summary_G4-1.json", "r", encoding="utf-8").read()
+content = open("summary_G4-1.json", "r", encoding="utf-8").read()
 r = s.put("http://172.19.181.250:8888/api/contents/dashboard_data/summary_G4-1.json",
     json={"type": "file", "format": "text", "name": "summary_G4-1.json", "content": content},
     headers={"X-XSRFToken": xsrf})
