@@ -5,134 +5,118 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SFT 데이터 구축 대시보드</title>
 <style>
-:root{--bg:#0f1117;--card:#1a1d25;--border:#2a2d35;--text:#e0e0e0;--dim:#888;--accent:#6c9fff;--teal:#4ecdc4;--coral:#ff6b6b;--yellow:#ffd93d;--purple:#c084fc}
+:root{--bg:#f5f6f8;--card:#fff;--border:#e2e5ea;--text:#1a1a1a;--dim:#777;--accent:#3b82f6;--teal:#10b981;--coral:#ef4444;--yellow:#f59e0b;--purple:#8b5cf6;--card-shadow:0 1px 3px rgba(0,0,0,.08)}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
 
-/* ── Sidebar ── */
-.sb{width:250px;background:#13151b;border-right:1px solid var(--border);position:fixed;top:0;left:0;bottom:0;overflow-y:auto}
-.sb-title{padding:18px 20px;font-size:1.05em;font-weight:700;color:#fff;border-bottom:1px solid var(--border)}
-.sb-label{padding:6px 16px;font-size:.7em;color:#555;text-transform:uppercase;letter-spacing:1px;margin-top:10px}
+.sb{width:250px;background:#fff;border-right:1px solid var(--border);position:fixed;top:0;left:0;bottom:0;overflow-y:auto}
+.sb-title{padding:18px 20px;font-size:1.05em;font-weight:700;color:var(--text);border-bottom:1px solid var(--border)}
+.sb-label{padding:6px 16px;font-size:.7em;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-top:10px}
 .sb-item{padding:10px 20px;cursor:pointer;font-size:.86em;color:var(--dim);display:flex;justify-content:space-between;align-items:center;border-left:3px solid transparent;transition:all .12s}
-.sb-item:hover{background:var(--card);color:#ccc}
-.sb-item.on{background:var(--card);color:var(--accent);border-left-color:var(--accent);font-weight:600}
+.sb-item:hover{background:#f0f2f5;color:#333}
+.sb-item.on{background:#eff6ff;color:var(--accent);border-left-color:var(--accent);font-weight:600}
 .sb-badge{font-size:.66em;padding:2px 7px;border-radius:8px;font-weight:600}
-.sb-badge.done{background:#1a332a;color:var(--teal)}.sb-badge.wip{background:#2a2518;color:var(--yellow)}.sb-badge.wait{color:#555;border:1px solid var(--border)}
+.sb-badge.done{background:#d1fae5;color:#065f46}.sb-badge.wip{background:#fef3c7;color:#92400e}.sb-badge.wait{background:#f3f4f6;color:#9ca3af}
 
-/* ── Main ── */
 .main{margin-left:250px;flex:1;padding:24px 30px;min-height:100vh}
-.pg-title{font-size:1.4em;font-weight:700;color:#fff;margin-bottom:3px}
+.pg-title{font-size:1.4em;font-weight:700;color:var(--text);margin-bottom:3px}
 .pg-desc{color:var(--dim);font-size:.86em;margin-bottom:18px}
 .tabs{display:flex;gap:4px;margin-bottom:18px;border-bottom:2px solid var(--border)}
-.tab{padding:10px 20px;cursor:pointer;border-radius:7px 7px 0 0;background:var(--card);color:var(--dim);font-weight:600;font-size:.88em;transition:all .15s}
-.tab.on{background:var(--border);color:var(--accent);border-bottom:2px solid var(--accent);margin-bottom:-2px}
-.tab:hover{color:#fff}
+.tab{padding:10px 20px;cursor:pointer;border-radius:7px 7px 0 0;background:var(--card);color:var(--dim);font-weight:600;font-size:.88em;transition:all .15s;border:1px solid transparent;border-bottom:none}
+.tab.on{background:var(--accent);color:#fff;margin-bottom:-2px}
+.tab:hover{color:var(--accent)}
 
-/* ── Common ── */
-.section{font-size:.98em;font-weight:700;color:#fff;margin:22px 0 10px;padding-bottom:5px;border-bottom:1px solid var(--border)}
+.section{font-size:.98em;font-weight:700;color:var(--text);margin:22px 0 10px;padding-bottom:5px;border-bottom:1px solid var(--border)}
 .badge{font-size:.7em;padding:3px 9px;border-radius:9px;font-weight:600}
-.badge.done{background:#1a332a;color:var(--teal)}.badge.wip{background:#2a2518;color:var(--yellow)}.badge.wait{color:#555;border:1px solid var(--border)}
-.empty{text-align:center;color:#555;padding:50px 20px;font-size:.88em}
+.badge.done{background:#d1fae5;color:#065f46}.badge.wip{background:#fef3c7;color:#92400e}.badge.wait{background:#f3f4f6;color:#9ca3af}
+.empty{text-align:center;color:var(--dim);padding:50px 20px;font-size:.88em}
 
-/* ── Cards ── */
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:18px}
-.card{background:var(--card);border-radius:10px;padding:16px;text-align:center;border:1px solid var(--border)}
+.card{background:var(--card);border-radius:10px;padding:16px;text-align:center;border:1px solid var(--border);box-shadow:var(--card-shadow)}
 .card .v{font-size:1.7em;font-weight:700;color:var(--accent)}
 .card .l{color:var(--dim);font-size:.78em;margin-top:3px}
 
-/* ── Info bar ── */
-.info{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;padding:11px 15px;background:var(--card);border:1px solid var(--border);border-radius:7px;font-size:.84em}
+.info{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;padding:11px 15px;background:var(--card);border:1px solid var(--border);border-radius:7px;font-size:.84em;box-shadow:var(--card-shadow)}
 .info span{display:flex;gap:4px;align-items:center}
 .info .k{color:var(--dim)}.info .val{color:var(--accent);font-weight:600}
 .info .sep{width:1px;background:var(--border);margin:0 2px}
 
-/* ── Progress bar ── */
 .prog{margin:10px 0}
-.prog-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:3px}
-.prog-fill{height:100%;border-radius:3px}
-.prog-label{display:flex;justify-content:space-between;font-size:.72em;color:var(--dim)}
+.prog-bar{height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;margin-top:3px}
+.prog-fill{height:100%;border-radius:4px}
+.prog-label{display:flex;justify-content:space-between;font-size:.76em;color:var(--dim)}
 
-/* ── Table ── */
 .tbl{width:100%;border-collapse:collapse;margin:10px 0;font-size:.84em}
-.tbl th{background:#12141a;color:var(--accent);text-align:left;padding:8px 12px;border-bottom:2px solid var(--border);font-weight:600}
-.tbl td{padding:8px 12px;border-bottom:1px solid var(--card);color:#bbb}
-.tbl tr:hover{background:var(--card)}
+.tbl th{background:#f8f9fa;color:var(--accent);text-align:left;padding:8px 12px;border-bottom:2px solid var(--border);font-weight:600}
+.tbl td{padding:8px 12px;border-bottom:1px solid #f0f0f0;color:#555}
+.tbl tr:hover{background:#f8f9fb}
 .tbl .safe{color:var(--teal)}.tbl .risk{color:var(--yellow)}
 .tbl .cat{color:var(--teal);font-size:.78em;font-weight:600}
 
-/* ── Task grid (overview) ── */
-.tg{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;margin:14px 0}
-.tc{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;transition:all .15s}
-.tc:hover{border-color:var(--accent);transform:translateY(-2px)}
+.tc{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;transition:all .15s;margin-bottom:10px;box-shadow:var(--card-shadow)}
+.tc:hover{border-color:var(--accent);transform:translateY(-1px);box-shadow:0 4px 12px rgba(59,130,246,.1)}
 .tc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
 .tc-id{font-size:.76em;color:var(--accent);font-weight:700}
-.tc-name{font-size:1em;font-weight:600;color:#fff;margin-bottom:2px}
-.tc-desc{font-size:.78em;color:var(--dim);margin-bottom:10px;line-height:1.4}
-.tc-stats{display:flex;gap:10px;flex-wrap:wrap;font-size:.78em}
-.tc-stats .val{color:var(--accent);font-weight:600}
+.tc-name{font-size:1em;font-weight:600;color:var(--text);margin-bottom:2px}
 
-/* ── Bar chart (횡단차원) ── */
-.dim-wrap{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;margin:12px 0}
+.dim-wrap{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;margin:12px 0;box-shadow:var(--card-shadow)}
 .dim-row{display:flex;align-items:center;gap:8px;margin:8px 0}
-.dim-name{min-width:100px;font-size:.82em;color:#ccc;text-align:right}
+.dim-name{min-width:100px;font-size:.82em;color:#555;text-align:right}
 .dim-bars{flex:1;display:flex;flex-direction:column;gap:2px}
 .dim-bar-row{display:flex;align-items:center;gap:5px}
-.dim-bar-bg{flex:1;height:12px;background:#12141a;border-radius:3px;overflow:hidden}
-.dim-bar-fill{height:100%;border-radius:3px}
-.dim-tag{font-size:.68em;min-width:28px;color:var(--dim)}
-.dim-val{font-size:.76em;min-width:90px;color:#aaa;font-weight:600}
+.dim-bar-bg{flex:1;height:14px;background:#f0f0f0;border-radius:4px;overflow:hidden}
+.dim-bar-fill{height:100%;border-radius:4px}
+.dim-tag{font-size:.7em;min-width:28px;color:var(--dim)}
+.dim-val{font-size:.78em;min-width:90px;color:#555;font-weight:600}
 .dim-legend{display:flex;gap:14px;margin-top:8px;justify-content:center;font-size:.74em;color:var(--dim)}
 
-/* ── Donut ── */
-.donut-section{display:flex;gap:24px;flex-wrap:wrap;margin:12px 0}
-.donut-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;flex:1;min-width:260px}
-.donut-title{font-size:.84em;color:#ccc;font-weight:600;margin-bottom:10px}
+.donut-section{display:flex;gap:20px;flex-wrap:wrap;margin:12px 0}
+.donut-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;flex:1;min-width:260px;box-shadow:var(--card-shadow)}
+.donut-title{font-size:.84em;color:#555;font-weight:600;margin-bottom:10px}
 .donut-body{display:flex;align-items:center;gap:16px}
 .donut-ring{position:relative;width:80px;height:80px;flex-shrink:0}
 .donut-ring svg{transform:rotate(-90deg)}
 .donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;line-height:1.2}
-.donut-center .n{font-size:1.3em;font-weight:700;color:#fff}
+.donut-center .n{font-size:1.3em;font-weight:700;color:var(--text)}
 .donut-center .u{font-size:.65em;color:var(--dim)}
 .donut-legend{flex:1;display:flex;flex-direction:column;gap:6px}
 .donut-item{display:flex;align-items:center;gap:8px;font-size:.84em}
 .donut-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
-.donut-label{color:#ccc;flex:1}
-.donut-val{color:#fff;font-weight:600}
+.donut-label{color:#555;flex:1}
+.donut-val{color:var(--text);font-weight:600}
 
-/* ── Pipeline ── */
 .pipe{display:flex;align-items:center;gap:7px;margin:14px 0;overflow-x:auto;padding:6px 0}
-.pipe-step{background:var(--card);border:2px solid var(--border);border-radius:9px;padding:10px 14px;min-width:130px;text-align:center;flex-shrink:0}
+.pipe-step{background:var(--card);border:2px solid var(--border);border-radius:9px;padding:10px 14px;min-width:130px;text-align:center;flex-shrink:0;box-shadow:var(--card-shadow)}
 .pipe-step.p-done{border-color:var(--teal)}.pipe-step.p-wip{border-color:var(--yellow)}
 .pipe-step .sn{font-size:.68em;color:var(--accent);font-weight:700}
-.pipe-step .nm{font-size:.84em;font-weight:600;margin:2px 0;color:#fff}
+.pipe-step .nm{font-size:.84em;font-weight:600;margin:2px 0;color:var(--text)}
 .pipe-step .bd{margin-top:5px}
-.pipe-arr{color:#444;font-size:1em;flex-shrink:0}
+.pipe-arr{color:#ccc;font-size:1em;flex-shrink:0}
 
-/* ── Issues ── */
 .iss{margin:8px 0}
-.iss-item{display:flex;gap:8px;align-items:flex-start;padding:9px 12px;background:var(--card);border:1px solid var(--border);border-radius:6px;margin-bottom:5px;font-size:.82em}
+.iss-item{display:flex;gap:8px;align-items:flex-start;padding:9px 12px;background:var(--card);border:1px solid var(--border);border-radius:6px;margin-bottom:5px;font-size:.82em;box-shadow:var(--card-shadow)}
 .iss-sev{font-size:.68em;padding:2px 6px;border-radius:3px;font-weight:600;flex-shrink:0}
-.iss-sev.error{background:#3a1a1a;color:var(--coral)}.iss-sev.warn{background:#2a2518;color:var(--yellow)}.iss-sev.info{background:#1a2535;color:var(--accent)}
-.iss-text{flex:1;line-height:1.4;color:#bbb}.iss-date{color:#555;font-size:.76em}
+.iss-sev.error{background:#fee2e2;color:#991b1b}.iss-sev.warn{background:#fef3c7;color:#92400e}.iss-sev.info{background:#dbeafe;color:#1e40af}
+.iss-text{flex:1;line-height:1.4;color:#555}.iss-date{color:#aaa;font-size:.76em}
 
-/* ── Samples ── */
 .samp-sel{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
 .samp-btn{padding:8px 14px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:.82em;transition:all .12s}
-.samp-btn.on{border-color:var(--accent);color:var(--accent);background:#1a1d2f}
+.samp-btn.on{border-color:var(--accent);color:#fff;background:var(--accent)}
 .samp-btn:hover{border-color:var(--accent)}
 .meta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-.meta-tag{background:var(--card);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:.74em}
+.meta-tag{background:#f8f9fa;border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:.74em}
 .meta-tag.accent{border-color:var(--accent);color:var(--accent)}.meta-tag.teal{border-color:var(--teal);color:var(--teal)}.meta-tag.coral{border-color:var(--coral);color:var(--coral)}.meta-tag.yellow{border-color:var(--yellow);color:var(--yellow)}
-.chat{background:var(--card);border-radius:9px;padding:16px;max-height:550px;overflow-y:auto}
+.chat{background:#f8f9fa;border:1px solid var(--border);border-radius:9px;padding:16px;max-height:550px;overflow-y:auto}
 .msg{margin-bottom:12px}
-.msg.sys{background:#12141a;border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:6px;padding:10px 12px;font-size:.8em;color:#999;max-height:110px;overflow:hidden;cursor:pointer;transition:max-height .3s;line-height:1.5}
+.msg.sys{background:#fff;border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:6px;padding:10px 12px;font-size:.8em;color:#666;max-height:110px;overflow:hidden;cursor:pointer;transition:max-height .3s;line-height:1.5}
 .msg.sys.open{max-height:5000px}
 .msg.sys::after{content:'... (클릭하여 전체 보기)';display:block;color:var(--accent);font-size:.74em;margin-top:4px;font-weight:600}
-.msg.sys.open::after{content:'(접기)';color:#555}
+.msg.sys.open::after{content:'(접기)';color:var(--dim)}
 .msg .role{font-size:.68em;font-weight:700;margin-bottom:2px}
 .msg .role.u{color:var(--teal)}.msg .role.a{color:var(--coral)}
 .msg .ct{line-height:1.6;font-size:.84em;white-space:pre-wrap}
-.msg .think{background:#0a0c10;border-left:3px solid var(--accent);padding:6px 10px;margin-bottom:6px;border-radius:0 4px 4px 0;font-size:.78em;color:#8899aa}
+.msg .think{background:#f0f4ff;border-left:3px solid var(--accent);padding:6px 10px;margin-bottom:6px;border-radius:0 4px 4px 0;font-size:.78em;color:#6b7280}
+.seed-expand{background:#f8f9fa;border-radius:6px;padding:12px;font-size:.82em;color:#666;max-height:200px;overflow-y:auto}
 </style>
 </head>
 <body>
@@ -151,20 +135,17 @@ body{font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;b
 <script>
 const SHEET_ID='1y6OEISDUfad_NaM7Jx0kYNaxk5fSVOHUK_LVIIiEYXw';
 const TASK_IDS=['G4-1','G4-2','G4-3','G4-4','G4-5','G4-6'];
-const DC=['#4ecdc4','#6c9fff','#ffd93d','#ff6b6b','#c084fc','#fb923c'];
+const DC=['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899'];
 let T=[],cur='__all__',ctab='dash';
 
-// ── CSV parser ──
 function csv(t){const rows=[];let c=[],f='',q=false;
 for(let i=0;i<t.length;i++){const ch=t[i];
 if(q){if(ch==='"'&&t[i+1]==='"'){f+='"';i++;}else if(ch==='"')q=false;else f+=ch;}
 else{if(ch==='"')q=true;else if(ch===','){c.push(f.trim());f='';}else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&t[i+1]==='\n')i++;c.push(f.trim());if(c.some(v=>v))rows.push(c);c=[];f='';}else f+=ch;}}
 c.push(f.trim());if(c.some(v=>v))rows.push(c);if(!rows.length)return[];
 const h=rows[0];return rows.slice(1).map(r=>{const o={};h.forEach((k,i)=>o[k]=r[i]||'');return o;});}
-
 function surl(t){return`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(t)}`;}
 
-// ── Data loading ──
 async function load(){
   T=[];
   try{
@@ -177,7 +158,7 @@ async function load(){
     T=tR.filter(r=>TASK_IDS.includes(r.id)).map(r=>{const id=r.id;return{
       id,name:r.name||'',desc:r.desc||'',status:r.status||'wait',
       info:{tier:+r.tier||0,target:+r.target||0,minimum:+r.minimum||0,lang_ratio:r.lang_ratio||'',cot_ratio:r.cot_ratio||''},
-      seeds:dedup(sR.filter(s=>s.task_id===id),'name').map(s=>({name:s.name,category:s.category,usage:s.usage,contamination:s.contamination||'-'})),
+      seeds:dedup(sR.filter(s=>s.task_id===id),'name').map(s=>({name:s.name,category:s.category,usage:s.usage,contamination:s.contamination||'-',sample:s.sample||''})),
       crossDims:dR.filter(x=>x.task_id===id).map(x=>({name:x.name,target:+x.target||0,actual:+x.actual||0,turnDist:(tdM[id]||{})[x.name]||{}})),
       dataStats:{completed:+r.completed||0,pass_rate:+r.pass_rate||0,avg_turns:+r.avg_turns||0,lang:plang(r.lang_ratio),cot:pcot(r.cot_ratio),domains:[]},
       pipeline:dedup(pR.filter(p=>p.task_id===id),'phase').map(p=>({phase:p.phase,name:p.name,detail:(p.detail||'').replace(/\\n/g,'\n'),status:p.status||'wait'})),
@@ -190,7 +171,6 @@ function plang(s){const m=(s||'').match(/(\d+)\s*:\s*(\d+)/);if(!m)return{};retu
 function pcot(s){const t=(s||'').match(/think\s*(\d+)/i),n=(s||'').match(/no_think\s*(\d+)/i);return{think:t?+t[1]:0,no_think:n?+n[1]:0};}
 load();
 
-// ── Helpers ──
 function bg(s){const m={done:['완료','done'],wip:['진행중','wip'],wait:['대기','wait']};const[t,c]=m[s]||['?','wait'];return`<span class="badge ${c}">${t}</span>`;}
 function pct(n,d){return d?Math.round(n/d*100):0;}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');}
@@ -200,9 +180,9 @@ function donut(entries,total,colors){
   const R=34,CX=40,CY=40,C=2*Math.PI*R;let off=0,paths='';
   entries.forEach(([k,v])=>{const p=total?v/total:0;const d=p*C;
     paths+=`<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${colors[k]||'#6c9fff'}" stroke-width="8" stroke-dasharray="${d} ${C-d}" stroke-dashoffset="${-off}"/>`;off+=d;});
-  return`<div class="donut-ring"><svg viewBox="0 0 80 80" width="80" height="80"><circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="#12141a" stroke-width="8"/>${paths}</svg><div class="donut-center"><div class="n">${total}</div><div class="u">건</div></div></div>`;}
+  return`<div class="donut-ring"><svg viewBox="0 0 80 80" width="80" height="80"><circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="#e5e7eb" stroke-width="8"/>${paths}</svg><div class="donut-center"><div class="n">${total}</div><div class="u">건</div></div></div>`;}
+function toggleSeed(tid,idx){const el=document.getElementById('seed-'+tid+'-'+idx);if(el)el.style.display=el.style.display==='none'?'':'none';}
 
-// ── Navigation ──
 function buildSb(){
   let h=`<div class="sb-title">SFT 데이터 구축</div><div class="sb-item on" data-id="__all__" onclick="nav('__all__')">전체 요약</div><div class="sb-label">태스크</div>`;
   T.forEach(t=>{const bl={done:'완료',wip:'진행중',wait:'대기'}[t.status]||'?';
@@ -212,92 +192,64 @@ function nav(id){cur=id;document.querySelectorAll('.sb-item').forEach(e=>e.class
   if(id==='__all__'){document.getElementById('pgT').textContent='전체 요약';document.getElementById('pgD').textContent='G4 태스크별 데이터 구축 현황';}
   else{const t=T.find(x=>x.id===id);document.getElementById('pgT').textContent=`${t.id} ${t.name}`;document.getElementById('pgD').textContent=t.desc;}render();}
 function tab(t,el){ctab=t;document.querySelectorAll('.tab').forEach(e=>e.classList.remove('on'));el.classList.add('on');render();}
-function render(){const el=document.getElementById('ct');
-  const tabsEl=document.getElementById('tabs');
+function render(){const el=document.getElementById('ct');const tabsEl=document.getElementById('tabs');
   if(cur==='__all__'){tabsEl.style.display='none';el.innerHTML=ovDash();}
   else{tabsEl.style.display='flex';const t=T.find(x=>x.id===cur);if(!t)return;el.innerHTML={dash:()=>tDash(t),pipe:()=>tPipe(t),samp:()=>tSamp(t)}[ctab]();}}
 
-// ══════════════════════════════════════
-//  전체 요약
-// ══════════════════════════════════════
 function ovDash(){
   let h='';
   T.forEach(t=>{const p=pct(t.dataStats?.completed||0,t.info?.target||1);
-    h+=`<div class="tc" onclick="nav('${t.id}')" style="margin-bottom:10px"><div class="tc-head"><span class="tc-id">${t.id} · Tier ${t.info?.tier||'?'}</span>${bg(t.status)}</div><div class="tc-name">${t.name}</div><div class="prog"><div class="prog-label"><span>${p}% (${nm(t.dataStats?.completed)}/${nm(t.info?.target)})</span><span>최소 ${nm(t.info?.minimum)}</span></div><div class="prog-bar"><div class="prog-fill" style="width:${p}%;background:${pc(p)}"></div></div></div></div>`;});
+    h+=`<div class="tc" onclick="nav('${t.id}')"><div class="tc-head"><span class="tc-id">${t.id} · Tier ${t.info?.tier||'?'}</span>${bg(t.status)}</div><div class="tc-name">${t.name}</div><div class="prog"><div class="prog-label"><span>${p}% (${nm(t.dataStats?.completed)}/${nm(t.info?.target)})</span><span>최소 ${nm(t.info?.minimum)}</span></div><div class="prog-bar"><div class="prog-fill" style="width:${p}%;background:${pc(p)}"></div></div></div></div>`;});
   return h;}
 
-function ovPipe(){
-  let h='<div class="section">파이프라인 진행 현황</div><table class="tbl"><tr><th>태스크</th><th>Tier</th><th>상태</th><th>시드 구축</th><th>시드 검증</th><th>대화 생성</th><th>품질 검증</th></tr>';
-  T.forEach(t=>{h+=`<tr><td><strong>${t.id}</strong> ${t.name}</td><td>Tier ${t.info?.tier||'?'}</td><td>${bg(t.status)}</td>`;
-    t.pipeline.forEach(p=>{const c={done:'done',wip:'wip',wait:'wait'}[p.status]||'wait';h+=`<td><span class="badge ${c}">${{done:'완료',wip:'진행중',wait:'대기'}[p.status]}</span></td>`;});h+='</tr>';});
-  h+='</table>';T.forEach(t=>{h+=`<div class="section">${t.id} ${t.name}</div>`+mkPipe(t.pipeline);});return h;}
-
-function ovSamp(){
-  let h='<div class="section">태스크별 대표 샘플</div>';
-  T.forEach(t=>{h+=`<div class="section" style="font-size:.9em;color:var(--accent);cursor:pointer" onclick="nav('${t.id}')">${t.id} ${t.name} →</div>`;
-    if(!t.samples?.length){h+='<div class="empty" style="padding:16px">아직 샘플이 없습니다.</div>';return;}h+=mkChat(t.samples[0],true);});return h;}
-
-// ══════════════════════════════════════
-//  태스크 상세
-// ══════════════════════════════════════
 function tDash(t){
   const inf=t.info||{},ds=t.dataStats||{},p=pct(ds.completed||0,inf.target||1);
-
-  // 기본정보 + 진척도
   let h=`<div class="info"><span class="k">Tier</span><span class="val">${inf.tier||'?'}</span><span class="sep"></span><span class="k">목표</span><span class="val">${nm(inf.target)}</span><span class="sep"></span><span class="k">최소</span><span class="val">${nm(inf.minimum)}</span><span class="sep"></span><span class="k">언어</span><span class="val">${inf.lang_ratio||'-'}</span><span class="sep"></span><span class="k">CoT</span><span class="val">${inf.cot_ratio||'-'}</span></div>`;
   h+=`<div class="cards"><div class="card"><div class="v">${nm(ds.completed)}</div><div class="l">완료 (${p}%)</div></div><div class="card"><div class="v">${ds.pass_rate||0}%</div><div class="l">통과율</div></div><div class="card"><div class="v">${ds.avg_turns||'-'}</div><div class="l">평균 턴 수</div></div><div class="card"><div class="v">${t.seeds?.length||0}</div><div class="l">시드 종류</div></div></div>`;
 
-  // 시드 데이터 (클릭하면 샘플 표시)
+  // 시드 데이터
   if(t.seeds?.length){h+='<div class="section">시드 데이터</div><table class="tbl"><tr><th>데이터셋</th><th>분류</th><th>사용 방식</th><th>오염 위험</th></tr>';
     t.seeds.forEach((s,i)=>{const cc=(s.contamination==='-'||(s.contamination||'').includes('없음'))?'safe':'risk';
-      h+=`<tr style="cursor:pointer" onclick="toggleSeed('${t.id}',${i})"><td style="font-weight:600;color:var(--accent)">${s.name} ▾</td><td><span class="cat">${s.category}</span></td><td style="color:#aaa">${s.usage}</td><td class="${cc}">${s.contamination}</td></tr>`;
-      h+=`<tr id="seed-${t.id}-${i}" style="display:none"><td colspan="4"><div style="background:#12141a;border-radius:6px;padding:12px;font-size:.82em;color:#aaa;max-height:200px;overflow-y:auto"><div style="color:var(--dim);margin-bottom:6px">샘플 데이터 (파이프라인 sync 시 자동 채워짐)</div><pre style="color:#ccc;white-space:pre-wrap;font-size:.85em">${esc(s.sample||'아직 샘플 데이터가 없습니다.')}</pre></div></td></tr>`;});
+      h+=`<tr style="cursor:pointer" onclick="toggleSeed('${t.id}',${i})"><td style="font-weight:600;color:var(--accent)">${s.name} ▾</td><td><span class="cat">${s.category}</span></td><td style="color:#888">${s.usage}</td><td class="${cc}">${s.contamination}</td></tr>`;
+      h+=`<tr id="seed-${t.id}-${i}" style="display:none"><td colspan="4"><div class="seed-expand"><pre style="white-space:pre-wrap;font-size:.85em;color:#555">${esc(s.sample||'아직 샘플 데이터가 없습니다. (파이프라인 sync 시 자동 채워짐)')}</pre></div></td></tr>`;});
     h+='</table>';}
 
-  // 횡단차원 bar chart
+  // 횡단차원
   if(t.crossDims?.length){
     const total=ds.completed||1;
     h+='<div class="section">횡단차원 매트릭스</div><div class="dim-wrap">';
     t.crossDims.forEach(d=>{
       const cls=d.actual===0?'var(--yellow)':Math.abs(d.actual-d.target)<=3?'var(--teal)':d.actual<d.target?'var(--yellow)':'var(--accent)';
       const mx=Math.max(d.target,d.actual,1);
-      h+=`<div class="dim-row"><span class="dim-name">${d.name}</span><div class="dim-bars"><div class="dim-bar-row"><span class="dim-tag">목표</span><div class="dim-bar-bg"><div class="dim-bar-fill" style="width:${d.target/mx*100}%;background:#555"></div></div><span class="dim-val">${d.target}% (${Math.round(d.target*total/100)}건)</span></div><div class="dim-bar-row"><span class="dim-tag">실제</span><div class="dim-bar-bg"><div class="dim-bar-fill" style="width:${d.actual/mx*100}%;background:${cls}"></div></div><span class="dim-val">${d.actual}% (${Math.round(d.actual*total/100)}건)</span></div></div></div>`;});
-    h+='<div class="dim-legend"><span>■ 목표</span><span style="color:var(--teal)">■ 달성</span><span style="color:var(--yellow)">■ 미달</span><span style="color:var(--accent)">■ 초과</span></div></div>';}
+      h+=`<div class="dim-row"><span class="dim-name">${d.name}</span><div class="dim-bars"><div class="dim-bar-row"><span class="dim-tag">목표</span><div class="dim-bar-bg"><div class="dim-bar-fill" style="width:${d.target/mx*100}%;background:#ccc"></div></div><span class="dim-val">${d.target}%</span></div><div class="dim-bar-row"><span class="dim-tag">실제</span><div class="dim-bar-bg"><div class="dim-bar-fill" style="width:${d.actual/mx*100}%;background:${cls}"></div></div><span class="dim-val">${d.actual}%</span></div></div></div>`;});
+    h+='<div class="dim-legend"><span style="color:#ccc">■ 목표</span><span style="color:var(--teal)">■ 달성</span><span style="color:var(--yellow)">■ 미달</span><span style="color:var(--accent)">■ 초과</span></div></div>';}
 
-  // 언어 + CoT 도넛 (실제 데이터 없으면 목표 비율 표시)
+  // 언어 + CoT 도넛 (항상 표시)
   h+='<div class="section">분포</div><div class="donut-section">';
-  {
-    const hasLang=ds.lang&&Object.values(ds.lang).some(v=>v);
-    const lE=hasLang?Object.entries(ds.lang):Object.entries(plang(inf.lang_ratio||''));
-    const lT=lE.reduce((a,[,v])=>a+v,0);const lC={KO:'#4ecdc4',EN:'#ff6b6b',ko:'#4ecdc4',en:'#ff6b6b'};
-    if(lT>0){
-      h+=`<div class="donut-card"><div class="donut-title">언어 분포${hasLang?'':' (목표)'}</div><div class="donut-body">${donut(lE,lT,lC)}<div class="donut-legend">`;
-      lE.forEach(([k,v])=>h+=`<div class="donut-item"><span class="donut-dot" style="background:${lC[k]||'#6c9fff'}"></span><span class="donut-label">${k}</span><span class="donut-val">${hasLang?v+'건 ('+pct(v,lT)+'%)':pct(v,lT)+'%'}</span></div>`);
-      h+='</div></div></div>';}
-  }
-  {
-    const hasCot=ds.cot&&Object.values(ds.cot).some(v=>v);
-    const cE=hasCot?Object.entries(ds.cot):Object.entries(pcot(inf.cot_ratio||''));
-    const cT=cE.reduce((a,[,v])=>a+v,0);const cC={think:'#4ecdc4',no_think:'#ff6b6b'};
-    if(cT>0){
-      h+=`<div class="donut-card"><div class="donut-title">CoT 분포${hasCot?'':' (목표)'}</div><div class="donut-body">${donut(cE,cT,cC)}<div class="donut-legend">`;
-      cE.forEach(([k,v])=>h+=`<div class="donut-item"><span class="donut-dot" style="background:${cC[k]||'#6c9fff'}"></span><span class="donut-label">${k}</span><span class="donut-val">${hasCot?v+'건 ('+pct(v,cT)+'%)':pct(v,cT)+'%'}</span></div>`);
-      h+='</div></div></div>';}
-  }
+  {const hasLang=ds.lang&&Object.values(ds.lang).some(v=>v);
+   const lE=hasLang?Object.entries(ds.lang):Object.entries(plang(inf.lang_ratio||'EN:KO = 5:5'));
+   const lT=lE.reduce((a,[,v])=>a+v,0);const lC={KO:'#10b981',EN:'#3b82f6',ko:'#10b981',en:'#3b82f6'};
+   if(lT>0){h+=`<div class="donut-card"><div class="donut-title">언어 분포${hasLang?'':' (목표)'}</div><div class="donut-body">${donut(lE,lT,lC)}<div class="donut-legend">`;
+     lE.forEach(([k,v])=>h+=`<div class="donut-item"><span class="donut-dot" style="background:${lC[k]||'#3b82f6'}"></span><span class="donut-label">${k}</span><span class="donut-val">${hasLang?v+'건 ('+pct(v,lT)+'%)':pct(v,lT)+'%'}</span></div>`);
+     h+='</div></div></div>';}}
+  {const hasCot=ds.cot&&Object.values(ds.cot).some(v=>v);
+   const cE=hasCot?Object.entries(ds.cot):Object.entries(pcot(inf.cot_ratio||'think 50% / no_think 50%'));
+   const cT=cE.reduce((a,[,v])=>a+v,0);const cC={think:'#10b981',no_think:'#ef4444'};
+   if(cT>0){h+=`<div class="donut-card"><div class="donut-title">CoT 분포${hasCot?'':' (목표)'}</div><div class="donut-body">${donut(cE,cT,cC)}<div class="donut-legend">`;
+     cE.forEach(([k,v])=>h+=`<div class="donut-item"><span class="donut-dot" style="background:${cC[k]||'#3b82f6'}"></span><span class="donut-label">${k}</span><span class="donut-val">${hasCot?v+'건 ('+pct(v,cT)+'%)':pct(v,cT)+'%'}</span></div>`);
+     h+='</div></div></div>';}}
   h+='</div>';
 
-  // 이슈
   if(t.issues?.length){h+='<div class="section">이슈</div><div class="iss">';
     t.issues.forEach(i=>h+=`<div class="iss-item"><span class="iss-sev ${i.severity}">${i.severity.toUpperCase()}</span><span class="iss-text">${i.text}</span><span class="iss-date">${i.date}</span></div>`);h+='</div>';}
   return h;}
 
-// ── 파이프라인 ──
 function mkPipe(steps){
   let h='<div class="pipe">';
   steps.forEach((p,i)=>{if(i)h+='<div class="pipe-arr">→</div>';
     h+=`<div class="pipe-step p-${p.status}"><div class="sn">${p.phase}</div><div class="nm">${p.name}</div><div class="bd">${bg(p.status)}</div></div>`;});
   h+='</div><table class="tbl"><tr><th>단계</th><th>이름</th><th>상태</th><th>상세</th></tr>';
-  steps.forEach(p=>h+=`<tr><td style="color:var(--accent);font-weight:600">${p.phase}</td><td style="font-weight:600">${p.name}</td><td>${bg(p.status)}</td><td style="color:#aaa">${esc(p.detail)}</td></tr>`);
+  steps.forEach(p=>h+=`<tr><td style="color:var(--accent);font-weight:600">${p.phase}</td><td style="font-weight:600">${p.name}</td><td>${bg(p.status)}</td><td style="color:#888">${esc(p.detail)}</td></tr>`);
   return h+'</table>';}
 function tPipe(t){
   const dn=t.pipeline.filter(p=>p.status==='done').length;
@@ -305,7 +257,6 @@ function tPipe(t){
   if(t.issues?.length){h+='<div class="section">이슈</div><div class="iss">';
     t.issues.forEach(i=>h+=`<div class="iss-item"><span class="iss-sev ${i.severity}">${i.severity.toUpperCase()}</span><span class="iss-text">${i.text}</span><span class="iss-date">${i.date}</span></div>`);h+='</div>';}return h;}
 
-// ── 구축 예시 ──
 function tSamp(t){
   if(!t.samples?.length)return'<div class="empty">아직 구축된 샘플이 없습니다.</div>';
   let h='<div class="samp-sel">';
@@ -321,7 +272,6 @@ function mkChat(s,tags){let h='';
     else{const rc=m.role==='user'?'u':'a',rn=m.role==='user'?'USER':'ASSISTANT';
       h+=`<div class="msg"><div class="role ${rc}">${rn}</div><div class="ct">${mkThink(m.content)}</div></div>`;}});
   return h+'</div>';}
-function toggleSeed(tid,idx){const el=document.getElementById('seed-'+tid+'-'+idx);if(el)el.style.display=el.style.display==='none'?'':'none';}
 function mkThink(t){if(!t)return'';const p=[];let l=0;const re=/<think>([\s\S]*?)<\/think>/g;let m;
   while((m=re.exec(t))!==null){if(m.index>l)p.push(esc(t.slice(l,m.index)));p.push('<div class="think">'+esc(m[1])+'</div>');l=re.lastIndex;}
   if(l<t.length)p.push(esc(t.slice(l)));return p.join('');}
