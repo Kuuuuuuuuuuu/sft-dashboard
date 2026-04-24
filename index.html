@@ -247,10 +247,12 @@ function tDash(t){
   let h=`<div class="info"><span class="k">Tier</span><span class="val">${inf.tier||'?'}</span><span class="sep"></span><span class="k">목표</span><span class="val">${nm(inf.target)}</span><span class="sep"></span><span class="k">최소</span><span class="val">${nm(inf.minimum)}</span><span class="sep"></span><span class="k">언어</span><span class="val">${inf.lang_ratio||'-'}</span><span class="sep"></span><span class="k">CoT</span><span class="val">${inf.cot_ratio||'-'}</span></div>`;
   h+=`<div class="cards"><div class="card"><div class="v">${nm(ds.completed)}</div><div class="l">완료 (${p}%)</div></div><div class="card"><div class="v">${ds.pass_rate||0}%</div><div class="l">통과율</div></div><div class="card"><div class="v">${ds.avg_turns||'-'}</div><div class="l">평균 턴 수</div></div><div class="card"><div class="v">${t.seeds?.length||0}</div><div class="l">시드 종류</div></div></div>`;
 
-  // 시드 데이터
+  // 시드 데이터 (클릭하면 샘플 표시)
   if(t.seeds?.length){h+='<div class="section">시드 데이터</div><table class="tbl"><tr><th>데이터셋</th><th>분류</th><th>사용 방식</th><th>오염 위험</th></tr>';
-    t.seeds.forEach(s=>{const cc=(s.contamination==='-'||(s.contamination||'').includes('없음'))?'safe':'risk';
-      h+=`<tr><td style="font-weight:600">${s.name}</td><td><span class="cat">${s.category}</span></td><td style="color:#aaa">${s.usage}</td><td class="${cc}">${s.contamination}</td></tr>`;});h+='</table>';}
+    t.seeds.forEach((s,i)=>{const cc=(s.contamination==='-'||(s.contamination||'').includes('없음'))?'safe':'risk';
+      h+=`<tr style="cursor:pointer" onclick="toggleSeed('${t.id}',${i})"><td style="font-weight:600;color:var(--accent)">${s.name} ▾</td><td><span class="cat">${s.category}</span></td><td style="color:#aaa">${s.usage}</td><td class="${cc}">${s.contamination}</td></tr>`;
+      h+=`<tr id="seed-${t.id}-${i}" style="display:none"><td colspan="4"><div style="background:#12141a;border-radius:6px;padding:12px;font-size:.82em;color:#aaa;max-height:200px;overflow-y:auto"><div style="color:var(--dim);margin-bottom:6px">샘플 데이터 (파이프라인 sync 시 자동 채워짐)</div><pre style="color:#ccc;white-space:pre-wrap;font-size:.85em">${esc(s.sample||'아직 샘플 데이터가 없습니다.')}</pre></div></td></tr>`;});
+    h+='</table>';}
 
   // 횡단차원 bar chart
   if(t.crossDims?.length){
@@ -262,18 +264,26 @@ function tDash(t){
       h+=`<div class="dim-row"><span class="dim-name">${d.name}</span><div class="dim-bars"><div class="dim-bar-row"><span class="dim-tag">목표</span><div class="dim-bar-bg"><div class="dim-bar-fill" style="width:${d.target/mx*100}%;background:#555"></div></div><span class="dim-val">${d.target}% (${Math.round(d.target*total/100)}건)</span></div><div class="dim-bar-row"><span class="dim-tag">실제</span><div class="dim-bar-bg"><div class="dim-bar-fill" style="width:${d.actual/mx*100}%;background:${cls}"></div></div><span class="dim-val">${d.actual}% (${Math.round(d.actual*total/100)}건)</span></div></div></div>`;});
     h+='<div class="dim-legend"><span>■ 목표</span><span style="color:var(--teal)">■ 달성</span><span style="color:var(--yellow)">■ 미달</span><span style="color:var(--accent)">■ 초과</span></div></div>';}
 
-  // 언어 + CoT 도넛
+  // 언어 + CoT 도넛 (실제 데이터 없으면 목표 비율 표시)
   h+='<div class="section">분포</div><div class="donut-section">';
-  if(ds.lang&&Object.keys(ds.lang).length){
-    const lE=Object.entries(ds.lang),lT=lE.reduce((a,[,v])=>a+v,0),lC={KO:'#4ecdc4',EN:'#ff6b6b'};
-    h+=`<div class="donut-card"><div class="donut-title">언어 분포</div><div class="donut-body">${donut(lE,lT,lC)}<div class="donut-legend">`;
-    lE.forEach(([k,v])=>h+=`<div class="donut-item"><span class="donut-dot" style="background:${lC[k]||'#6c9fff'}"></span><span class="donut-label">${k}</span><span class="donut-val">${v}건 (${pct(v,lT)}%)</span></div>`);
-    h+='</div></div></div>';}
-  if(ds.cot&&Object.values(ds.cot).some(v=>v)){
-    const cE=Object.entries(ds.cot),cT=cE.reduce((a,[,v])=>a+v,0),cC={think:'#4ecdc4',no_think:'#ff6b6b'};
-    h+=`<div class="donut-card"><div class="donut-title">CoT 분포</div><div class="donut-body">${donut(cE,cT,cC)}<div class="donut-legend">`;
-    cE.forEach(([k,v])=>h+=`<div class="donut-item"><span class="donut-dot" style="background:${cC[k]||'#6c9fff'}"></span><span class="donut-label">${k}</span><span class="donut-val">${v}건 (${pct(v,cT)}%)</span></div>`);
-    h+='</div></div></div>';}
+  {
+    const hasLang=ds.lang&&Object.values(ds.lang).some(v=>v);
+    const lE=hasLang?Object.entries(ds.lang):Object.entries(plang(inf.lang_ratio||''));
+    const lT=lE.reduce((a,[,v])=>a+v,0);const lC={KO:'#4ecdc4',EN:'#ff6b6b',ko:'#4ecdc4',en:'#ff6b6b'};
+    if(lT>0){
+      h+=`<div class="donut-card"><div class="donut-title">언어 분포${hasLang?'':' (목표)'}</div><div class="donut-body">${donut(lE,lT,lC)}<div class="donut-legend">`;
+      lE.forEach(([k,v])=>h+=`<div class="donut-item"><span class="donut-dot" style="background:${lC[k]||'#6c9fff'}"></span><span class="donut-label">${k}</span><span class="donut-val">${hasLang?v+'건 ('+pct(v,lT)+'%)':pct(v,lT)+'%'}</span></div>`);
+      h+='</div></div></div>';}
+  }
+  {
+    const hasCot=ds.cot&&Object.values(ds.cot).some(v=>v);
+    const cE=hasCot?Object.entries(ds.cot):Object.entries(pcot(inf.cot_ratio||''));
+    const cT=cE.reduce((a,[,v])=>a+v,0);const cC={think:'#4ecdc4',no_think:'#ff6b6b'};
+    if(cT>0){
+      h+=`<div class="donut-card"><div class="donut-title">CoT 분포${hasCot?'':' (목표)'}</div><div class="donut-body">${donut(cE,cT,cC)}<div class="donut-legend">`;
+      cE.forEach(([k,v])=>h+=`<div class="donut-item"><span class="donut-dot" style="background:${cC[k]||'#6c9fff'}"></span><span class="donut-label">${k}</span><span class="donut-val">${hasCot?v+'건 ('+pct(v,cT)+'%)':pct(v,cT)+'%'}</span></div>`);
+      h+='</div></div></div>';}
+  }
   h+='</div>';
 
   // 이슈
@@ -311,6 +321,7 @@ function mkChat(s,tags){let h='';
     else{const rc=m.role==='user'?'u':'a',rn=m.role==='user'?'USER':'ASSISTANT';
       h+=`<div class="msg"><div class="role ${rc}">${rn}</div><div class="ct">${mkThink(m.content)}</div></div>`;}});
   return h+'</div>';}
+function toggleSeed(tid,idx){const el=document.getElementById('seed-'+tid+'-'+idx);if(el)el.style.display=el.style.display==='none'?'':'none';}
 function mkThink(t){if(!t)return'';const p=[];let l=0;const re=/<think>([\s\S]*?)<\/think>/g;let m;
   while((m=re.exec(t))!==null){if(m.index>l)p.push(esc(t.slice(l,m.index)));p.push('<div class="think">'+esc(m[1])+'</div>');l=re.lastIndex;}
   if(l<t.length)p.push(esc(t.slice(l)));return p.join('');}
