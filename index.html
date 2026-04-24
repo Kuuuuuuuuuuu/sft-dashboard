@@ -127,6 +127,7 @@ body{font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;b
   <div class="tabs" id="tabs">
     <div class="tab on" onclick="tab('dash',this)">대시보드</div>
     <div class="tab" onclick="tab('pipe',this)">파이프라인</div>
+    <div class="tab" onclick="tab('prompt',this)">생성 프롬프트</div>
     <div class="tab" onclick="tab('samp',this)">구축 예시</div>
   </div>
   <div id="ct"></div>
@@ -152,8 +153,8 @@ async function load(){
     const[a,b,c,d,e,f]=await Promise.all(['tasks','seeds','pipeline','issues','crossDims','turnDist'].map(t=>fetch(surl(t)).then(r=>r.text()).catch(()=>'')));
     const tR=csv(a),sR=csv(b),pR=csv(c),iR=csv(d),dR=csv(e),tdR=csv(f);
     const tdM={};tdR.forEach(r=>{const id=r.task_id,dn=r.dim_name;tdM[id]=tdM[id]||{};tdM[id][dn]=tdM[id][dn]||{};tdM[id][dn][r.turns]=+r.count||0;});
-    const sm={};
-    for(const id of TASK_IDS){try{const r=await fetch('data/summary_'+id+'.json?t='+Date.now());if(r.ok){const d=await r.json();if(d?.samples?.length)sm[id]=d.samples;}}catch(e){}}
+    const sm={},pm={};
+    for(const id of TASK_IDS){try{const r=await fetch('data/summary_'+id+'.json?t='+Date.now());if(r.ok){const d=await r.json();if(d?.samples?.length)sm[id]=d.samples;if(d?.prompts)pm[id]=d.prompts;}}catch(e){}}
     const dedup=(a,k)=>[...new Map(a.map(x=>[x[k],x])).values()];
     T=tR.filter(r=>TASK_IDS.includes(r.id)).map(r=>{const id=r.id;return{
       id,name:r.name||'',desc:r.desc||'',status:r.status||'wait',
@@ -163,6 +164,7 @@ async function load(){
       dataStats:{completed:+r.completed||0,pass_rate:+r.pass_rate||0,avg_turns:+r.avg_turns||0,lang:plang(r.lang_ratio),cot:pcot(r.cot_ratio),domains:[]},
       pipeline:dedup(pR.filter(p=>p.task_id===id),'phase').map(p=>({phase:p.phase,name:p.name,detail:(p.detail||'').replace(/\\n/g,'\n'),status:p.status||'wait'})),
       issues:iR.filter(i=>i.task_id===id).map(i=>({severity:i.severity||'info',text:i.text||'',date:i.date||''})),
+      prompts:pm[id]||{},
       samples:sm[id]||[]};});
   }catch(e){console.error(e);}
   buildSb();render();
@@ -194,7 +196,7 @@ function nav(id){cur=id;document.querySelectorAll('.sb-item').forEach(e=>e.class
 function tab(t,el){ctab=t;document.querySelectorAll('.tab').forEach(e=>e.classList.remove('on'));el.classList.add('on');render();}
 function render(){const el=document.getElementById('ct');const tabsEl=document.getElementById('tabs');
   if(cur==='__all__'){tabsEl.style.display='none';el.innerHTML=ovDash();}
-  else{tabsEl.style.display='flex';const t=T.find(x=>x.id===cur);if(!t)return;el.innerHTML={dash:()=>tDash(t),pipe:()=>tPipe(t),samp:()=>tSamp(t)}[ctab]();}}
+  else{tabsEl.style.display='flex';const t=T.find(x=>x.id===cur);if(!t)return;el.innerHTML={dash:()=>tDash(t),pipe:()=>tPipe(t),prompt:()=>tPrompt(t),samp:()=>tSamp(t)}[ctab]();}}
 
 function ovDash(){
   let h='';
@@ -294,6 +296,17 @@ function tPipe(t){
   let h=`<div class="section">구축 프로세스 (${dn}/${t.pipeline.length} 완료)</div>`+mkPipe(t.pipeline);
   if(t.issues?.length){h+='<div class="section">이슈</div><div class="iss">';
     t.issues.forEach(i=>h+=`<div class="iss-item"><span class="iss-sev ${i.severity}">${i.severity.toUpperCase()}</span><span class="iss-text">${i.text}</span><span class="iss-date">${i.date}</span></div>`);h+='</div>';}return h;}
+
+// ── 생성 프롬프트 ──
+function tPrompt(t){
+  const p=t.prompts||{};
+  let h='<div class="section">생성 프롬프트</div>';
+  if(p.system){h+=`<div style="margin-bottom:16px"><div style="font-weight:600;font-size:.88em;color:#333;margin-bottom:6px">시스템 프롬프트</div><div style="background:#f8f9fa;border:1px solid var(--border);border-radius:6px;padding:14px;font-size:.84em;color:#444;white-space:pre-wrap;line-height:1.6;max-height:400px;overflow-y:auto">${esc(p.system)}</div></div>`;}
+  if(p.user){h+=`<div style="margin-bottom:16px"><div style="font-weight:600;font-size:.88em;color:#333;margin-bottom:6px">유저 프롬프트</div><div style="background:#f0f7ff;border:1px solid #d0e3ff;border-radius:6px;padding:14px;font-size:.84em;color:#444;white-space:pre-wrap;line-height:1.6;max-height:400px;overflow-y:auto">${esc(p.user)}</div></div>`;}
+  if(p.eval){h+=`<div style="margin-bottom:16px"><div style="font-weight:600;font-size:.88em;color:#333;margin-bottom:6px">평가 프롬프트</div><div style="background:#f0faf4;border:1px solid #c6e9d7;border-radius:6px;padding:14px;font-size:.84em;color:#444;white-space:pre-wrap;line-height:1.6;max-height:400px;overflow-y:auto">${esc(p.eval)}</div></div>`;}
+  if(p.notes){h+=`<div style="margin-bottom:16px"><div style="font-weight:600;font-size:.88em;color:#333;margin-bottom:6px">비고</div><div style="font-size:.84em;color:#555;line-height:1.6">${esc(p.notes)}</div></div>`;}
+  if(!p.system&&!p.user&&!p.eval) h+='<div class="empty">아직 프롬프트가 등록되지 않았습니다.<br><span style="font-size:.82em;color:#999">파이프라인 sync 시 자동으로 채워집니다.</span></div>';
+  return h;}
 
 function tSamp(t){
   if(!t.samples?.length)return'<div class="empty">아직 구축된 샘플이 없습니다.<br><span style="font-size:.82em;color:#999">횡단차원별 1건씩 (멀티턴 변형 / 장문맥 / 부정적 지시 / 출력 형식 제어)</span></div>';
