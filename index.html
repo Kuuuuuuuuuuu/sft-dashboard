@@ -230,7 +230,33 @@ function tDash(t){
       h+=`</div></div>`;});
     h+='<div class="dim-legend"><span style="color:#333">│ 목표선</span>';
     t.crossDims.forEach((d,i)=>h+=`<span style="color:${DC[i%DC.length]}">■ ${d.name}</span>`);
-    h+='</div></div>';}
+    h+='</div>';
+
+    // 턴별 분포 차트 (차원별)
+    const hasTD=t.crossDims.some(d=>Object.keys(d.turnDist||{}).length);
+    if(hasTD){
+      h+='<div style="margin-top:16px;font-size:.9em;font-weight:600;color:#333;margin-bottom:10px">횡단차원별 턴 수 분포</div>';
+      h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px">';
+      t.crossDims.forEach((d,i)=>{
+        const td=d.turnDist||{};
+        const entries=Object.entries(td).map(([k,v])=>[+k,+v]).sort((a,b)=>a[0]-b[0]);
+        const total=entries.reduce((a,[,v])=>a+v,0);
+        const maxV=Math.max(...entries.map(([,v])=>v),1);
+        const color=DC[i%DC.length];
+        h+=`<div style="background:#f8f9fa;border:1px solid var(--border);border-radius:8px;padding:14px">`;
+        h+=`<div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-weight:600;font-size:.84em;color:#333">${d.name}</span><span style="font-size:.78em;color:#666">${total}건</span></div>`;
+        if(entries.length){
+          h+='<div style="display:flex;align-items:flex-end;gap:4px;height:80px;border-bottom:1px solid #e5e7eb;padding-bottom:2px">';
+          entries.forEach(([tn,cnt])=>{
+            const hp=Math.max(Math.round(cnt/maxV*100),cnt?5:0);
+            h+=`<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%"><div style="font-size:.68em;color:#555;margin-bottom:2px">${cnt}</div><div style="width:100%;max-width:28px;height:${hp}%;background:${color};border-radius:3px 3px 0 0"></div></div>`;});
+          h+='</div><div style="display:flex;gap:4px">';
+          entries.forEach(([tn])=>h+=`<div style="flex:1;text-align:center;font-size:.7em;color:#777;margin-top:3px">${tn}턴</div>`);
+          h+='</div>';
+        }else h+='<div style="color:#aaa;font-size:.8em;text-align:center;padding:20px 0">데이터 없음</div>';
+        h+='</div>';});
+      h+='</div>';}
+    h+='</div>';}
 
   // 언어 + CoT 도넛 (항상 표시)
   h+='<div class="section">분포</div><div class="donut-section">';
