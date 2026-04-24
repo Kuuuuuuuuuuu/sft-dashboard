@@ -3,516 +3,320 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SFT 데이터 구축 통합 대시보드</title>
+<title>SFT 데이터 구축 대시보드</title>
 <style>
+:root{--bg:#0f1117;--card:#1a1d25;--border:#2a2d35;--text:#e0e0e0;--dim:#888;--accent:#6c9fff;--teal:#4ecdc4;--coral:#ff6b6b;--yellow:#ffd93d;--purple:#c084fc}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:#0f1117;color:#e0e0e0;display:flex;min-height:100vh}
+body{font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
 
-/* Sidebar */
-.sidebar{width:260px;background:#13151b;border-right:1px solid #2a2d35;display:flex;flex-direction:column;flex-shrink:0;position:fixed;top:0;left:0;bottom:0;overflow-y:auto}
-.sb-title{padding:20px;font-size:1.1em;font-weight:700;color:#fff;border-bottom:1px solid #2a2d35}
-.sb-section{padding:8px 12px;font-size:.72em;color:#555;text-transform:uppercase;letter-spacing:1px;margin-top:8px}
-.sb-item{padding:11px 20px;cursor:pointer;font-size:.88em;color:#888;transition:all .15s;display:flex;justify-content:space-between;align-items:center;border-left:3px solid transparent}
-.sb-item:hover{background:#1a1d25;color:#ccc}
-.sb-item.active{background:#1a1d25;color:#6c9fff;border-left-color:#6c9fff;font-weight:600}
-.sb-item .sb-badge{font-size:.68em;padding:2px 7px;border-radius:8px;font-weight:600}
-.sb-item .sb-badge.done{background:#1a332a;color:#4ecdc4}
-.sb-item .sb-badge.wip{background:#2a2518;color:#ffd93d}
-.sb-item .sb-badge.wait{background:transparent;color:#555;border:1px solid #2a2d35}
+/* ── Sidebar ── */
+.sb{width:250px;background:#13151b;border-right:1px solid var(--border);position:fixed;top:0;left:0;bottom:0;overflow-y:auto}
+.sb-title{padding:18px 20px;font-size:1.05em;font-weight:700;color:#fff;border-bottom:1px solid var(--border)}
+.sb-label{padding:6px 16px;font-size:.7em;color:#555;text-transform:uppercase;letter-spacing:1px;margin-top:10px}
+.sb-item{padding:10px 20px;cursor:pointer;font-size:.86em;color:var(--dim);display:flex;justify-content:space-between;align-items:center;border-left:3px solid transparent;transition:all .12s}
+.sb-item:hover{background:var(--card);color:#ccc}
+.sb-item.on{background:var(--card);color:var(--accent);border-left-color:var(--accent);font-weight:600}
+.sb-badge{font-size:.66em;padding:2px 7px;border-radius:8px;font-weight:600}
+.sb-badge.done{background:#1a332a;color:var(--teal)}.sb-badge.wip{background:#2a2518;color:var(--yellow)}.sb-badge.wait{color:#555;border:1px solid var(--border)}
 
-/* Main */
-.main{margin-left:260px;flex:1;padding:24px 32px;min-height:100vh}
-.page-title{font-size:1.5em;font-weight:700;color:#fff;margin-bottom:4px}
-.page-desc{color:#888;font-size:.88em;margin-bottom:20px}
-.tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:2px solid #2a2d35}
-.tab{padding:11px 22px;cursor:pointer;border-radius:8px 8px 0 0;background:#1a1d25;color:#888;font-weight:600;transition:all .2s;font-size:.9em}
-.tab.active{background:#2a2d35;color:#6c9fff;border-bottom:2px solid #6c9fff;margin-bottom:-2px}
+/* ── Main ── */
+.main{margin-left:250px;flex:1;padding:24px 30px;min-height:100vh}
+.pg-title{font-size:1.4em;font-weight:700;color:#fff;margin-bottom:3px}
+.pg-desc{color:var(--dim);font-size:.86em;margin-bottom:18px}
+.tabs{display:flex;gap:4px;margin-bottom:18px;border-bottom:2px solid var(--border)}
+.tab{padding:10px 20px;cursor:pointer;border-radius:7px 7px 0 0;background:var(--card);color:var(--dim);font-weight:600;font-size:.88em;transition:all .15s}
+.tab.on{background:var(--border);color:var(--accent);border-bottom:2px solid var(--accent);margin-bottom:-2px}
 .tab:hover{color:#fff}
 
-/* Cards */
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-bottom:20px}
-.stat-card{background:#1a1d25;border-radius:10px;padding:16px;text-align:center;border:1px solid #2a2d35}
-.stat-card .num{font-size:1.7em;font-weight:700;color:#6c9fff}
-.stat-card .label{color:#888;font-size:.8em;margin-top:3px}
-.info-bar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;padding:12px 16px;background:#1a1d25;border:1px solid #2a2d35;border-radius:8px}
-.info-item{font-size:.84em;display:flex;gap:5px;align-items:center}
-.info-item .il{color:#888}.info-item .iv{color:#6c9fff;font-weight:600}
-.info-sep{width:1px;background:#2a2d35;margin:0 3px}
+/* ── Common ── */
+.section{font-size:.98em;font-weight:700;color:#fff;margin:22px 0 10px;padding-bottom:5px;border-bottom:1px solid var(--border)}
+.badge{font-size:.7em;padding:3px 9px;border-radius:9px;font-weight:600}
+.badge.done{background:#1a332a;color:var(--teal)}.badge.wip{background:#2a2518;color:var(--yellow)}.badge.wait{color:#555;border:1px solid var(--border)}
+.empty{text-align:center;color:#555;padding:50px 20px;font-size:.88em}
 
-/* Task cards */
-.task-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(350px,1fr));gap:14px;margin:16px 0}
-.task-card{background:#1a1d25;border:1px solid #2a2d35;border-radius:10px;padding:18px;cursor:pointer;transition:all .2s}
-.task-card:hover{border-color:#6c9fff;transform:translateY(-2px)}
-.task-card .tc-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.task-card .tc-id{font-size:.78em;color:#6c9fff;font-weight:700}
-.task-card .tc-name{font-size:1em;font-weight:600;color:#fff;margin-bottom:3px}
-.task-card .tc-desc{font-size:.8em;color:#888;margin-bottom:10px;line-height:1.4}
-.task-card .tc-stats{display:flex;gap:12px;flex-wrap:wrap;font-size:.8em}
-.task-card .tc-stat .v{color:#6c9fff;font-weight:600}
-.tc-progress{margin-top:10px}
-.tc-progress-bar{height:5px;background:#2a2d35;border-radius:3px;overflow:hidden;margin-top:3px}
-.tc-progress-fill{height:100%;border-radius:3px}
-.tc-progress-label{font-size:.72em;color:#888;display:flex;justify-content:space-between}
-.badge{font-size:.72em;padding:3px 10px;border-radius:10px;font-weight:600}
-.badge.done{background:#1a332a;color:#4ecdc4}.badge.wip{background:#2a2518;color:#ffd93d}.badge.wait{background:#1a1d25;color:#666;border:1px solid #2a2d35}
+/* ── Cards ── */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:18px}
+.card{background:var(--card);border-radius:10px;padding:16px;text-align:center;border:1px solid var(--border)}
+.card .v{font-size:1.7em;font-weight:700;color:var(--accent)}
+.card .l{color:var(--dim);font-size:.78em;margin-top:3px}
 
-/* Seed table */
-.seed-table{width:100%;border-collapse:collapse;margin:10px 0}
-.seed-table th{background:#12141a;padding:9px 12px;text-align:left;font-size:.8em;color:#6c9fff;border-bottom:2px solid #2a2d35}
-.seed-table td{padding:9px 12px;border-bottom:1px solid #1a1d25;font-size:.83em;line-height:1.4}
-.seed-table tr:hover{background:#1a1d25}
-.seed-cat{color:#4ecdc4;font-size:.78em;font-weight:600}
-.seed-safe{color:#4ecdc4;font-size:.82em}.seed-risk{color:#ffd93d;font-size:.82em}
+/* ── Info bar ── */
+.info{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;padding:11px 15px;background:var(--card);border:1px solid var(--border);border-radius:7px;font-size:.84em}
+.info span{display:flex;gap:4px;align-items:center}
+.info .k{color:var(--dim)}.info .val{color:var(--accent);font-weight:600}
+.info .sep{width:1px;background:var(--border);margin:0 2px}
 
-/* Cross dims — target vs actual 비교 */
-.dim-chart-wrap{margin:12px 0;padding:16px;background:#1a1d25;border:1px solid #2a2d35;border-radius:8px}
-.dim-chart-row{display:flex;align-items:center;gap:10px;margin:10px 0}
-.dim-chart-label{min-width:110px;font-size:.84em;color:#ccc;text-align:right}
-.dim-chart-bars{flex:1;display:flex;flex-direction:column;gap:3px}
-.dim-chart-bar-row{display:flex;align-items:center;gap:6px}
-.dim-chart-bar-bg{flex:1;height:14px;background:#12141a;border-radius:3px;overflow:hidden}
-.dim-chart-bar{height:100%;border-radius:3px;transition:width .3s}
-.dim-chart-bar.target{background:#555}
-.dim-chart-bar.actual-ok{background:#4ecdc4}
-.dim-chart-bar.actual-under{background:#ffd93d}
-.dim-chart-bar.actual-over{background:#6c9fff}
-.dim-chart-tag{font-size:.7em;min-width:36px;color:#888}
-.dim-chart-val{font-size:.78em;min-width:50px;color:#aaa;font-weight:600}
-.dim-chart-legend{display:flex;gap:16px;margin-top:8px;justify-content:center}
-.dim-chart-legend span{font-size:.75em;color:#888;display:flex;align-items:center;gap:4px}
-.dim-chart-legend span::before{content:'';display:inline-block;width:10px;height:10px;border-radius:2px}
+/* ── Progress bar ── */
+.prog{margin:10px 0}
+.prog-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:3px}
+.prog-fill{height:100%;border-radius:3px}
+.prog-label{display:flex;justify-content:space-between;font-size:.72em;color:var(--dim)}
 
-/* Turn chart */
-.chart-wrap{margin:16px 0;padding:20px;background:#1a1d25;border:1px solid #2a2d35;border-radius:8px}
-.chart-title{font-size:.85em;color:#ccc;margin-bottom:14px;font-weight:600}
-.chart-container{position:relative;padding-left:36px;padding-bottom:24px}
-.chart-yaxis{position:absolute;left:0;top:0;bottom:24px;width:32px;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-end;padding-right:6px}
-.chart-yaxis span{font-size:.68em;color:#555}
-.chart{display:flex;align-items:stretch;gap:8px;height:140px;border-left:1px solid #2a2d35;border-bottom:1px solid #2a2d35;padding:0 8px 0 4px}
-.chart-group{display:flex;gap:2px;align-items:flex-end;flex:1}
-.chart-bar{min-width:14px;border-radius:3px 3px 0 0;min-height:2px;cursor:default;transition:opacity .15s}
-.chart-bar:hover{opacity:.8}
-.chart-xlabel{font-size:.72em;color:#888;text-align:center;margin-top:6px;font-weight:500;flex-shrink:0}
-.chart-col{display:flex;flex-direction:column;align-items:center;flex:1}
-.chart-legend{display:flex;gap:16px;margin-top:12px;flex-wrap:wrap;justify-content:center}
-.chart-legend-item{font-size:.78em;color:#aaa;display:flex;align-items:center;gap:5px}
-.chart-legend-dot{width:10px;height:10px;border-radius:2px}
-.turn-small-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
-.turn-card{background:#12141a;border:1px solid #2a2d35;border-radius:8px;padding:14px 14px 12px}
-.turn-card-head{display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:10px}
-.turn-card-title{font-size:.82em;color:#ddd;font-weight:700}
-.turn-card-total{font-size:.75em;color:#888;white-space:nowrap}
-.turn-bars{display:flex;align-items:flex-end;gap:6px;height:118px;border-left:1px solid #2a2d35;border-bottom:1px solid #2a2d35;padding:0 6px}
-.turn-col{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;flex:1;min-width:20px;height:100%}
-.turn-bar{width:100%;max-width:24px;min-height:2px;border-radius:3px 3px 0 0}
-.turn-label{font-size:.68em;color:#777;margin-top:6px}
-.turn-empty{color:#666;font-size:.8em;padding:28px 0;text-align:center}
+/* ── Table ── */
+.tbl{width:100%;border-collapse:collapse;margin:10px 0;font-size:.84em}
+.tbl th{background:#12141a;color:var(--accent);text-align:left;padding:8px 12px;border-bottom:2px solid var(--border);font-weight:600}
+.tbl td{padding:8px 12px;border-bottom:1px solid var(--card);color:#bbb}
+.tbl tr:hover{background:var(--card)}
+.tbl .safe{color:var(--teal)}.tbl .risk{color:var(--yellow)}
+.tbl .cat{color:var(--teal);font-size:.78em;font-weight:600}
 
-/* Distribution */
-.dist-wrap{margin:16px 0;padding:20px;background:#1a1d25;border:1px solid #2a2d35;border-radius:8px}
-.dist-section{margin:16px 0}
-.dist-section:first-child{margin-top:0}
-.dist-header{font-size:.85em;color:#ccc;margin-bottom:10px;font-weight:600}
-.dist-visual{display:flex;align-items:center;gap:20px}
-.dist-ring{position:relative;width:90px;height:90px;flex-shrink:0}
-.dist-ring svg{transform:rotate(-90deg)}
-.dist-ring-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:.72em;color:#aaa;text-align:center;line-height:1.3}
-.dist-ring-center .rv{font-size:1.4em;font-weight:700;color:#fff}
-.dist-legend{flex:1;display:flex;flex-direction:column;gap:8px}
-.dist-legend-item{display:flex;align-items:center;gap:10px;font-size:.88em}
-.dist-legend-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0}
-.dist-legend-name{color:#ccc;min-width:70px}
-.dist-legend-bar{flex:1;height:18px;background:#12141a;border-radius:3px;overflow:hidden}
-.dist-legend-fill{height:100%;border-radius:3px}
-.dist-legend-val{min-width:90px;text-align:right;font-size:.84em;font-weight:600;color:#fff}
-.domain-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:5px;margin:10px 0}
-.domain-chip{background:#12141a;border:1px solid #2a2d35;border-radius:5px;padding:7px 10px;display:flex;justify-content:space-between;font-size:.8em}
-.domain-chip .dc-n{color:#ccc}.domain-chip .dc-v{color:#6c9fff;font-weight:600}
+/* ── Task grid (overview) ── */
+.tg{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;margin:14px 0}
+.tc{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;transition:all .15s}
+.tc:hover{border-color:var(--accent);transform:translateY(-2px)}
+.tc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.tc-id{font-size:.76em;color:var(--accent);font-weight:700}
+.tc-name{font-size:1em;font-weight:600;color:#fff;margin-bottom:2px}
+.tc-desc{font-size:.78em;color:var(--dim);margin-bottom:10px;line-height:1.4}
+.tc-stats{display:flex;gap:10px;flex-wrap:wrap;font-size:.78em}
+.tc-stats .val{color:var(--accent);font-weight:600}
 
-/* Pipeline */
-.pipeline{display:flex;align-items:center;gap:8px;margin:16px 0;overflow-x:auto;padding:8px 0}
-.pipe-step{background:#1a1d25;border:2px solid #2a2d35;border-radius:10px;padding:12px 16px;min-width:150px;text-align:center;flex-shrink:0}
-.pipe-step.p-done{border-color:#4ecdc4}.pipe-step.p-wip{border-color:#ffd93d}
-.pipe-step .step-num{font-size:.7em;color:#6c9fff;font-weight:700}
-.pipe-step .step-name{font-size:.86em;font-weight:600;margin:3px 0;color:#fff}
-.pipe-step .step-detail{font-size:.7em;color:#888;line-height:1.4}
-.pipe-step .step-badge{margin-top:6px}
-.pipe-arrow{color:#444;font-size:1.1em;flex-shrink:0}
-.ov-pipe-table{width:100%;border-collapse:collapse;margin:16px 0}
-.ov-pipe-table th{background:#1a1d25;padding:9px 12px;text-align:left;font-size:.82em;color:#6c9fff;border-bottom:2px solid #2a2d35}
-.ov-pipe-table td{padding:10px 12px;border-bottom:1px solid #1a1d25;font-size:.83em}
-.ov-pipe-table tr:hover{background:#1a1d25}
-.mini-step{border-radius:4px;padding:2px 7px;font-size:.76em}
-.mini-step.ms-done{background:#1a332a;color:#4ecdc4}.mini-step.ms-wip{background:#2a2518;color:#ffd93d}.mini-step.ms-wait{background:#12141a;color:#555;border:1px solid #2a2d35}
+/* ── Bar chart (횡단차원) ── */
+.dim-wrap{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;margin:12px 0}
+.dim-row{display:flex;align-items:center;gap:8px;margin:8px 0}
+.dim-name{min-width:100px;font-size:.82em;color:#ccc;text-align:right}
+.dim-bars{flex:1;display:flex;flex-direction:column;gap:2px}
+.dim-bar-row{display:flex;align-items:center;gap:5px}
+.dim-bar-bg{flex:1;height:12px;background:#12141a;border-radius:3px;overflow:hidden}
+.dim-bar-fill{height:100%;border-radius:3px}
+.dim-tag{font-size:.68em;min-width:28px;color:var(--dim)}
+.dim-val{font-size:.76em;min-width:90px;color:#aaa;font-weight:600}
+.dim-legend{display:flex;gap:14px;margin-top:8px;justify-content:center;font-size:.74em;color:var(--dim)}
 
-/* Issues */
-.issue-list{margin:10px 0}
-.issue-item{display:flex;gap:10px;align-items:flex-start;padding:10px 14px;background:#1a1d25;border:1px solid #2a2d35;border-radius:7px;margin-bottom:6px;font-size:.84em}
-.issue-sev{font-size:.7em;padding:2px 7px;border-radius:4px;font-weight:600;flex-shrink:0;margin-top:1px}
-.issue-sev.error{background:#3a1a1a;color:#ff6b6b}.issue-sev.warn{background:#2a2518;color:#ffd93d}.issue-sev.info{background:#1a2535;color:#6c9fff}
-.issue-text{flex:1;line-height:1.4}.issue-date{color:#555;font-size:.76em;flex-shrink:0}
+/* ── Donut ── */
+.donut-section{display:flex;gap:24px;flex-wrap:wrap;margin:12px 0}
+.donut-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;flex:1;min-width:260px}
+.donut-title{font-size:.84em;color:#ccc;font-weight:600;margin-bottom:10px}
+.donut-body{display:flex;align-items:center;gap:16px}
+.donut-ring{position:relative;width:80px;height:80px;flex-shrink:0}
+.donut-ring svg{transform:rotate(-90deg)}
+.donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;line-height:1.2}
+.donut-center .n{font-size:1.3em;font-weight:700;color:#fff}
+.donut-center .u{font-size:.65em;color:var(--dim)}
+.donut-legend{flex:1;display:flex;flex-direction:column;gap:6px}
+.donut-item{display:flex;align-items:center;gap:8px;font-size:.84em}
+.donut-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.donut-label{color:#ccc;flex:1}
+.donut-val{color:#fff;font-weight:600}
 
-/* Samples */
-.sample-selector{display:flex;gap:7px;margin-bottom:16px;flex-wrap:wrap}
-.sample-btn{padding:9px 16px;border-radius:7px;border:1px solid #2a2d35;background:#1a1d25;color:#e0e0e0;cursor:pointer;font-size:.84em;transition:all .15s}
-.sample-btn.active{border-color:#6c9fff;color:#6c9fff;background:#1a1d2f}.sample-btn:hover{border-color:#6c9fff}
-.meta-bar{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
-.meta-tag{background:#1a1d25;border:1px solid #2a2d35;border-radius:5px;padding:4px 9px;font-size:.76em}
-.meta-tag.accent{border-color:#6c9fff;color:#6c9fff}.meta-tag.teal{border-color:#4ecdc4;color:#4ecdc4}.meta-tag.coral{border-color:#ff6b6b;color:#ff6b6b}.meta-tag.yellow{border-color:#ffd93d;color:#ffd93d}
-.chat-area{background:#1a1d25;border-radius:10px;padding:18px;max-height:550px;overflow-y:auto}
-.msg{margin-bottom:14px}
-.msg.system{background:#12141a;border:1px solid #2a2d35;border-left:3px solid #6c9fff;border-radius:7px;padding:12px 14px;font-size:.82em;color:#999;max-height:120px;overflow:hidden;cursor:pointer;transition:max-height .3s;line-height:1.6}
-.msg.system.expanded{max-height:5000px}
-.msg.system::after{content:'... (클릭하여 전체 보기)';display:block;color:#6c9fff;font-size:.76em;margin-top:6px;font-weight:600}
-.msg.system.expanded::after{content:'(클릭하여 접기)';color:#555}
-.msg .role{font-size:.7em;font-weight:700;margin-bottom:3px}
-.msg .role.user-role{color:#4ecdc4}.msg .role.asst-role{color:#ff6b6b}
-.msg .content{line-height:1.6;font-size:.86em;white-space:pre-wrap}
-.msg .think-block{background:#0a0c10;border-left:3px solid #6c9fff;padding:7px 10px;margin-bottom:7px;border-radius:0 5px 5px 0;font-size:.78em;color:#8899aa}
-.section-title{font-size:1em;font-weight:700;margin:20px 0 10px;color:#fff;padding-bottom:6px;border-bottom:1px solid #2a2d35}
-.empty-state{text-align:center;color:#555;padding:50px 20px;font-size:.9em}
+/* ── Pipeline ── */
+.pipe{display:flex;align-items:center;gap:7px;margin:14px 0;overflow-x:auto;padding:6px 0}
+.pipe-step{background:var(--card);border:2px solid var(--border);border-radius:9px;padding:10px 14px;min-width:130px;text-align:center;flex-shrink:0}
+.pipe-step.p-done{border-color:var(--teal)}.pipe-step.p-wip{border-color:var(--yellow)}
+.pipe-step .sn{font-size:.68em;color:var(--accent);font-weight:700}
+.pipe-step .nm{font-size:.84em;font-weight:600;margin:2px 0;color:#fff}
+.pipe-step .bd{margin-top:5px}
+.pipe-arr{color:#444;font-size:1em;flex-shrink:0}
+
+/* ── Issues ── */
+.iss{margin:8px 0}
+.iss-item{display:flex;gap:8px;align-items:flex-start;padding:9px 12px;background:var(--card);border:1px solid var(--border);border-radius:6px;margin-bottom:5px;font-size:.82em}
+.iss-sev{font-size:.68em;padding:2px 6px;border-radius:3px;font-weight:600;flex-shrink:0}
+.iss-sev.error{background:#3a1a1a;color:var(--coral)}.iss-sev.warn{background:#2a2518;color:var(--yellow)}.iss-sev.info{background:#1a2535;color:var(--accent)}
+.iss-text{flex:1;line-height:1.4;color:#bbb}.iss-date{color:#555;font-size:.76em}
+
+/* ── Samples ── */
+.samp-sel{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.samp-btn{padding:8px 14px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:.82em;transition:all .12s}
+.samp-btn.on{border-color:var(--accent);color:var(--accent);background:#1a1d2f}
+.samp-btn:hover{border-color:var(--accent)}
+.meta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.meta-tag{background:var(--card);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:.74em}
+.meta-tag.accent{border-color:var(--accent);color:var(--accent)}.meta-tag.teal{border-color:var(--teal);color:var(--teal)}.meta-tag.coral{border-color:var(--coral);color:var(--coral)}.meta-tag.yellow{border-color:var(--yellow);color:var(--yellow)}
+.chat{background:var(--card);border-radius:9px;padding:16px;max-height:550px;overflow-y:auto}
+.msg{margin-bottom:12px}
+.msg.sys{background:#12141a;border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:6px;padding:10px 12px;font-size:.8em;color:#999;max-height:110px;overflow:hidden;cursor:pointer;transition:max-height .3s;line-height:1.5}
+.msg.sys.open{max-height:5000px}
+.msg.sys::after{content:'... (클릭하여 전체 보기)';display:block;color:var(--accent);font-size:.74em;margin-top:4px;font-weight:600}
+.msg.sys.open::after{content:'(접기)';color:#555}
+.msg .role{font-size:.68em;font-weight:700;margin-bottom:2px}
+.msg .role.u{color:var(--teal)}.msg .role.a{color:var(--coral)}
+.msg .ct{line-height:1.6;font-size:.84em;white-space:pre-wrap}
+.msg .think{background:#0a0c10;border-left:3px solid var(--accent);padding:6px 10px;margin-bottom:6px;border-radius:0 4px 4px 0;font-size:.78em;color:#8899aa}
 </style>
 </head>
 <body>
-<nav class="sidebar" id="sidebar"></nav>
+<nav class="sb" id="sb"></nav>
 <div class="main">
-  <div class="page-title" id="pageTitle">전체 요약</div>
-  <div class="page-desc" id="pageDesc">G4 태스크별 데이터 구축 현황</div>
-  <div class="tabs">
-    <div class="tab active" onclick="onTab('dashboard',this)">대시보드</div>
-    <div class="tab" onclick="onTab('seeds',this)">시드 데이터</div>
-    <div class="tab" onclick="onTab('pipeline',this)">구축 프로세스</div>
-    <div class="tab" onclick="onTab('samples',this)">구축 예시</div>
+  <div class="pg-title" id="pgT">전체 요약</div>
+  <div class="pg-desc" id="pgD">G4 태스크별 데이터 구축 현황</div>
+  <div class="tabs" id="tabs">
+    <div class="tab on" onclick="tab('dash',this)">대시보드</div>
+    <div class="tab" onclick="tab('pipe',this)">파이프라인</div>
+    <div class="tab" onclick="tab('samp',this)">구축 예시</div>
   </div>
-  <div id="content"></div>
+  <div id="ct"></div>
 </div>
+
 <script>
-const DIM_COLORS=['#4ecdc4','#6c9fff','#ffd93d','#ff6b6b','#c084fc','#fb923c'];
+const SHEET_ID='1y6OEISDUfad_NaM7Jx0kYNaxk5fSVOHUK_LVIIiEYXw';
 const TASK_IDS=['G4-1','G4-2','G4-3','G4-4','G4-5','G4-6'];
-let TASKS=[];
-let curTask='__all__',curTab='dashboard';
+const DC=['#4ecdc4','#6c9fff','#ffd93d','#ff6b6b','#c084fc','#fb923c'];
+let T=[],cur='__all__',ctab='dash';
 
-// ═══ 데이터 소스 설정 ═══
-// Google Sheets 연동: SHEET_ID를 넣으면 시트에서 로드, 비우면 JSON 파일 사용
-const SHEET_ID = '1y6OEISDUfad_NaM7Jx0kYNaxk5fSVOHUK_LVIIiEYXw';
+// ── CSV parser ──
+function csv(t){const rows=[];let c=[],f='',q=false;
+for(let i=0;i<t.length;i++){const ch=t[i];
+if(q){if(ch==='"'&&t[i+1]==='"'){f+='"';i++;}else if(ch==='"')q=false;else f+=ch;}
+else{if(ch==='"')q=true;else if(ch===','){c.push(f.trim());f='';}else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&t[i+1]==='\n')i++;c.push(f.trim());if(c.some(v=>v))rows.push(c);c=[];f='';}else f+=ch;}}
+c.push(f.trim());if(c.some(v=>v))rows.push(c);if(!rows.length)return[];
+const h=rows[0];return rows.slice(1).map(r=>{const o={};h.forEach((k,i)=>o[k]=r[i]||'');return o;});}
 
-// ═══ CSV 파서 ═══
-function parseCSV(text){
-  const rows=[];let cur=[];let field='';let inQ=false;
-  for(let i=0;i<text.length;i++){
-    const c=text[i];
-    if(inQ){if(c==='"'&&text[i+1]==='"'){field+='"';i++;}else if(c==='"')inQ=false;else field+=c;}
-    else{if(c==='"')inQ=true;else if(c===','){cur.push(field.trim());field='';}else if(c==='\n'||c==='\r'){if(c==='\r'&&text[i+1]==='\n')i++;cur.push(field.trim());if(cur.some(v=>v))rows.push(cur);cur=[];field='';}else field+=c;}
-  }
-  cur.push(field.trim());if(cur.some(v=>v))rows.push(cur);
-  if(!rows.length)return[];
-  const hdr=rows[0];
-  return rows.slice(1).map(r=>{const o={};hdr.forEach((h,i)=>o[h]=r[i]||'');return o;});
-}
+function surl(t){return`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(t)}`;}
 
-function sheetURL(tab){return`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}`;}
-
-// ═══ Google Sheets에서 로드 ═══
-async function loadFromSheets(){
-  const [tasksCSV,seedsCSV,pipeCSV,issuesCSV,dimsCSV,tdCSV]=await Promise.all(
-    ['tasks','seeds','pipeline','issues','crossDims','turnDist'].map(tab=>fetch(sheetURL(tab)).then(r=>r.text()).catch(()=>'')));
-  const tasksR=parseCSV(tasksCSV), seedsR=parseCSV(seedsCSV), pipeR=parseCSV(pipeCSV), issuesR=parseCSV(issuesCSV), dimsR=parseCSV(dimsCSV), tdR=parseCSV(tdCSV);
-
-  // turnDist 데이터를 {task_id: {dim_name: {turns: count}}} 로 변환
-  const tdMap={};
-  tdR.forEach(r=>{
-    const id=r.task_id, dn=r.dim_name, t=r.turns, c=+r.count||0;
-    if(!tdMap[id])tdMap[id]={};
-    if(!tdMap[id][dn])tdMap[id][dn]={};
-    tdMap[id][dn][String(t)]=c;
-  });
-
-  const samplesMap={};
-  for(const id of TASK_IDS){
-    try{
-      const r=await fetch('data/summary_'+id+'.json?t='+Date.now());
-      if(r.ok){const d=await r.json();if(d&&d.samples&&d.samples.length)samplesMap[id]=d.samples;}
-    }catch(e){}
-  }
-
-  TASKS=tasksR.filter(row=>TASK_IDS.includes(row.id)).map(row=>{
-    const id=row.id;
-    const dedup=(arr,key)=>[...new Map(arr.map(x=>[x[key],x])).values()];
-    return {
-      id, name:row.name||'', desc:row.desc||'', status:row.status||'wait',
-      info:{tier:+row.tier||0,target:+row.target||0,minimum:+row.minimum||0,lang_ratio:row.lang_ratio||'',cot_ratio:row.cot_ratio||''},
-      seeds:dedup(seedsR.filter(s=>s.task_id===id),'name').map(s=>({name:s.name,category:s.category,usage:s.usage,contamination:s.contamination||'-'})),
-      crossDims:dimsR.filter(d=>d.task_id===id).map(d=>({name:d.name,target:+d.target||0,actual:+d.actual||0,turnDist:(tdMap[id]||{})[d.name]||{}})),
-      dataStats:{completed:+row.completed||0,pass_rate:+row.pass_rate||0,avg_turns:+row.avg_turns||0,
-        lang:row.lang_ratio?parseLangRatio(row.lang_ratio):{},cot:row.cot_ratio?parseCotRatio(row.cot_ratio):{},domains:[]},
-      pipeline:dedup(pipeR.filter(p=>p.task_id===id),'phase').map(p=>({phase:p.phase,name:p.name,detail:(p.detail||'').replace(/\\n/g,'\n'),status:p.status||'wait'})),
-      issues:issuesR.filter(i=>i.task_id===id).map(i=>({severity:i.severity||'info',text:i.text||'',date:i.date||''})),
-      samples:samplesMap[id]||[]
-    };
-  });
-}
-
-function parseLangRatio(s){const m=s.match(/(\d+)\s*:\s*(\d+)/);if(!m)return{};if(s.includes('EN:KO'))return{EN:+m[1],KO:+m[2]};if(s.includes('KO'))return{KO:100};return{EN:+m[1],KO:+m[2]};}
-function parseCotRatio(s){const t=s.match(/think\s*(\d+)/i);const n=s.match(/no_think\s*(\d+)/i);return{think:t?+t[1]:0,no_think:n?+n[1]:0};}
-
-function inferDimValueMode(dims,total,field){
-  const vals=(dims||[]).map(d=>+d[field]||0).filter(v=>v>0);
-  if(!vals.length)return'percent';
-  const sum=vals.reduce((a,v)=>a+v,0);
-  if(total>0&&Math.abs(sum-total)<=Math.max(1,total*.03))return'count';
-  if(vals.some(v=>v>100))return'count';
-  if(total>0&&vals.some(v=>v>total))return'percent';
-  if(sum<=100&&vals.every(v=>v<=100))return'percent';
-  return'count';
-}
-function dimValue(d,total,field,mode){
-  const raw=+d[field]||0;
-  if(mode==='count'){
-    const count=raw;
-    return{raw,count,pct:total?Math.round(count/total*100):0};
-  }
-  const pctVal=raw;
-  return{raw,count:total?Math.round(pctVal*total/100):0,pct:Math.round(pctVal)};
-}
-function turnTotal(d){return Object.values(d.turnDist||{}).reduce((a,v)=>a+(+v||0),0);}
-
-// ═══ JSON 파일에서 로드 (Google Sheets 미설정 시) ═══
-async function loadFromJSON(){
-  const r=await Promise.allSettled(TASK_IDS.map(id=>fetch('data/summary_'+id+'.json').then(r=>{if(!r.ok)throw 0;return r.json();})));
-  r.forEach(x=>{if(x.status==='fulfilled')TASKS.push(x.value);});
-}
-
-// ═══ 통합 로더 ═══
-async function loadTasks(){
-  TASKS=[];
+// ── Data loading ──
+async function load(){
+  T=[];
   try{
-    if(SHEET_ID) await loadFromSheets(); else await loadFromJSON();
-  }catch(e){
-    try{await loadFromJSON();}catch(e2){}
-  }
-  const sb=document.getElementById('sidebar');
-  let h='<div class="sb-title">SFT 데이터 구축</div>';
-  h+='<div class="sb-item active" data-id="__all__" onclick="onNav(\'__all__\')">전체 요약</div>';
-  h+='<div class="sb-section">태스크</div>';
-  TASKS.forEach(t=>{const bl={done:'완료',wip:'진행중',wait:'대기'}[t.status]||'?';
-    h+=`<div class="sb-item" data-id="${t.id}" onclick="onNav('${t.id}')"><span>${t.id} ${t.name}</span><span class="sb-badge ${t.status}">${bl}</span></div>`;});
-  sb.innerHTML=h; render();
+    const[a,b,c,d,e,f]=await Promise.all(['tasks','seeds','pipeline','issues','crossDims','turnDist'].map(t=>fetch(surl(t)).then(r=>r.text()).catch(()=>'')));
+    const tR=csv(a),sR=csv(b),pR=csv(c),iR=csv(d),dR=csv(e),tdR=csv(f);
+    const tdM={};tdR.forEach(r=>{const id=r.task_id,dn=r.dim_name;tdM[id]=tdM[id]||{};tdM[id][dn]=tdM[id][dn]||{};tdM[id][dn][r.turns]=+r.count||0;});
+    const sm={};
+    for(const id of TASK_IDS){try{const r=await fetch('data/summary_'+id+'.json?t='+Date.now());if(r.ok){const d=await r.json();if(d?.samples?.length)sm[id]=d.samples;}}catch(e){}}
+    const dedup=(a,k)=>[...new Map(a.map(x=>[x[k],x])).values()];
+    T=tR.filter(r=>TASK_IDS.includes(r.id)).map(r=>{const id=r.id;return{
+      id,name:r.name||'',desc:r.desc||'',status:r.status||'wait',
+      info:{tier:+r.tier||0,target:+r.target||0,minimum:+r.minimum||0,lang_ratio:r.lang_ratio||'',cot_ratio:r.cot_ratio||''},
+      seeds:dedup(sR.filter(s=>s.task_id===id),'name').map(s=>({name:s.name,category:s.category,usage:s.usage,contamination:s.contamination||'-'})),
+      crossDims:dR.filter(x=>x.task_id===id).map(x=>({name:x.name,target:+x.target||0,actual:+x.actual||0,turnDist:(tdM[id]||{})[x.name]||{}})),
+      dataStats:{completed:+r.completed||0,pass_rate:+r.pass_rate||0,avg_turns:+r.avg_turns||0,lang:plang(r.lang_ratio),cot:pcot(r.cot_ratio),domains:[]},
+      pipeline:dedup(pR.filter(p=>p.task_id===id),'phase').map(p=>({phase:p.phase,name:p.name,detail:(p.detail||'').replace(/\\n/g,'\n'),status:p.status||'wait'})),
+      issues:iR.filter(i=>i.task_id===id).map(i=>({severity:i.severity||'info',text:i.text||'',date:i.date||''})),
+      samples:sm[id]||[]};});
+  }catch(e){console.error(e);}
+  buildSb();render();
 }
-loadTasks();
+function plang(s){const m=(s||'').match(/(\d+)\s*:\s*(\d+)/);if(!m)return{};return(s||'').includes('EN:KO')?{EN:+m[1],KO:+m[2]}:{KO:+m[1],EN:+m[2]};}
+function pcot(s){const t=(s||'').match(/think\s*(\d+)/i),n=(s||'').match(/no_think\s*(\d+)/i);return{think:t?+t[1]:0,no_think:n?+n[1]:0};}
+load();
 
-function onNav(id){
-  curTask=id;
-  document.querySelectorAll('.sb-item').forEach(el=>el.classList.toggle('active',el.dataset.id===id));
-  if(id==='__all__'){document.getElementById('pageTitle').textContent='전체 요약';document.getElementById('pageDesc').textContent='G4 태스크별 데이터 구축 현황';}
-  else{const t=TASKS.find(x=>x.id===id);document.getElementById('pageTitle').textContent=`${t.id} ${t.name}`;document.getElementById('pageDesc').textContent=t.desc;}
-  render();
-}
-function onTab(tab,el){curTab=tab;document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');render();}
-function render(){
-  const el=document.getElementById('content');
-  if(curTask==='__all__') el.innerHTML={dashboard:rvOvDash,seeds:rvOvSeeds,pipeline:rvOvPipe,samples:rvOvSamples}[curTab]();
-  else{const t=TASKS.find(x=>x.id===curTask);if(!t)return;el.innerHTML={dashboard:()=>rvDash(t),seeds:()=>rvSeeds(t),pipeline:()=>rvPipe(t),samples:()=>rvSamples(t)}[curTab]();}
-}
-
-function badge(s){const m={done:['완료','done'],wip:['진행중','wip'],wait:['대기','wait']};const[t,c]=m[s]||['?','wait'];return`<span class="badge ${c}">${t}</span>`;}
+// ── Helpers ──
+function bg(s){const m={done:['완료','done'],wip:['진행중','wip'],wait:['대기','wait']};const[t,c]=m[s]||['?','wait'];return`<span class="badge ${c}">${t}</span>`;}
 function pct(n,d){return d?Math.round(n/d*100):0;}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');}
-function pColor(p){return p>=80?'#4ecdc4':p>=40?'#ffd93d':'#ff6b6b';}
-function num(n){return(n||0).toLocaleString();}
+function pc(p){return p>=80?'var(--teal)':p>=40?'var(--yellow)':'var(--coral)';}
+function nm(n){return(n||0).toLocaleString();}
+function donut(entries,total,colors){
+  const R=34,CX=40,CY=40,C=2*Math.PI*R;let off=0,paths='';
+  entries.forEach(([k,v])=>{const p=total?v/total:0;const d=p*C;
+    paths+=`<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${colors[k]||'#6c9fff'}" stroke-width="8" stroke-dasharray="${d} ${C-d}" stroke-dashoffset="${-off}"/>`;off+=d;});
+  return`<div class="donut-ring"><svg viewBox="0 0 80 80" width="80" height="80"><circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="#12141a" stroke-width="8"/>${paths}</svg><div class="donut-center"><div class="n">${total}</div><div class="u">건</div></div></div>`;}
 
-// SVG 도넛 차트
-function mkRing(entries,total,colors){
-  const R=40,CX=45,CY=45,C=2*Math.PI*R;
-  let offset=0;
-  let paths='';
-  entries.forEach(([k,v])=>{
-    const pctV=total?v/total:0;
-    const dash=pctV*C;
-    paths+=`<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${colors[k]||'#6c9fff'}" stroke-width="10" stroke-dasharray="${dash} ${C-dash}" stroke-dashoffset="${-offset}" />`;
-    offset+=dash;
-  });
-  return `<div class="dist-ring"><svg viewBox="0 0 90 90" width="90" height="90">`
-    +`<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="#12141a" stroke-width="10" />`
-    +paths+`</svg><div class="dist-ring-center"><div class="rv">${total}</div>건</div></div>`;
-}
+// ── Navigation ──
+function buildSb(){
+  let h=`<div class="sb-title">SFT 데이터 구축</div><div class="sb-item on" data-id="__all__" onclick="nav('__all__')">전체 요약</div><div class="sb-label">태스크</div>`;
+  T.forEach(t=>{const bl={done:'완료',wip:'진행중',wait:'대기'}[t.status]||'?';
+    h+=`<div class="sb-item" data-id="${t.id}" onclick="nav('${t.id}')"><span>${t.id} ${t.name}</span><span class="sb-badge ${t.status}">${bl}</span></div>`;});
+  document.getElementById('sb').innerHTML=h;}
+function nav(id){cur=id;document.querySelectorAll('.sb-item').forEach(e=>e.classList.toggle('on',e.dataset.id===id));
+  if(id==='__all__'){document.getElementById('pgT').textContent='전체 요약';document.getElementById('pgD').textContent='G4 태스크별 데이터 구축 현황';}
+  else{const t=T.find(x=>x.id===id);document.getElementById('pgT').textContent=`${t.id} ${t.name}`;document.getElementById('pgD').textContent=t.desc;}render();}
+function tab(t,el){ctab=t;document.querySelectorAll('.tab').forEach(e=>e.classList.remove('on'));el.classList.add('on');render();}
+function render(){const el=document.getElementById('ct');
+  if(cur==='__all__')el.innerHTML={dash:ovDash,pipe:ovPipe,samp:ovSamp}[ctab]();
+  else{const t=T.find(x=>x.id===cur);if(!t)return;el.innerHTML={dash:()=>tDash(t),pipe:()=>tPipe(t),samp:()=>tSamp(t)}[ctab]();}}
 
-// ── OVERVIEW ──
-function rvOvDash(){
-  const tT=TASKS.reduce((a,t)=>a+(t.info?.target||0),0),tM=TASKS.reduce((a,t)=>a+(t.info?.minimum||0),0),tD=TASKS.reduce((a,t)=>a+(t.dataStats?.completed||0),0);
-  const nD=TASKS.filter(t=>t.status==='done').length,nW=TASKS.filter(t=>t.status==='wip').length,nWt=TASKS.filter(t=>t.status==='wait').length;
-  let h=`<div class="info-bar"><div class="info-item"><span class="il">태스크</span><span class="iv">${TASKS.length}개</span></div><div class="info-sep"></div><div class="info-item"><span class="il">전체 목표</span><span class="iv">${num(tT)}</span></div><div class="info-sep"></div><div class="info-item"><span class="il">전체 최소</span><span class="iv">${num(tM)}</span></div><div class="info-sep"></div><div class="info-item"><span class="il">완료</span><span class="iv">${num(tD)} (${pct(tD,tT)}%)</span></div><div class="info-sep"></div><div class="info-item"><span class="il">상태</span><span class="iv">${nD}완료/${nW}진행/${nWt}대기</span></div></div>`;
-  h+=`<div class="stats-grid"><div class="stat-card"><div class="num">${num(tT)}</div><div class="label">전체 목표</div></div><div class="stat-card"><div class="num">${num(tM)}</div><div class="label">전체 최소</div></div><div class="stat-card"><div class="num">${num(tD)}</div><div class="label">현재 완료</div></div><div class="stat-card"><div class="num">${pct(tD,tT)}%</div><div class="label">진행률</div></div></div>`;
-  h+='<div class="section-title">태스크 목록</div><div class="task-grid">';
-  TASKS.forEach(t=>{const p=pct(t.dataStats?.completed||0,t.info?.target||1);
-    h+=`<div class="task-card" onclick="onNav('${t.id}')"><div class="tc-header"><span class="tc-id">${t.id} · Tier ${t.info?.tier||'?'}</span>${badge(t.status)}</div><div class="tc-name">${t.name}</div><div class="tc-desc">${t.desc}</div><div class="tc-stats"><span class="tc-stat">목표 <span class="v">${num(t.info?.target)}</span></span><span class="tc-stat">최소 <span class="v">${num(t.info?.minimum)}</span></span><span class="tc-stat">언어 <span class="v">${t.info?.lang_ratio||'-'}</span></span></div><div class="tc-progress"><div class="tc-progress-label"><span>${p}%</span><span>${num(t.dataStats?.completed)}/${num(t.info?.target)}</span></div><div class="tc-progress-bar"><div class="tc-progress-fill" style="width:${p}%;background:${pColor(p)}"></div></div></div></div>`;});
-  return h+'</div>';
-}
-// ── OVERVIEW — 시드 데이터 ──
-function rvOvSeeds(){
-  let h='<div class="section-title">태스크별 시드 데이터</div>';
-  h+='<table class="seed-table"><tr><th>태스크</th><th>데이터셋</th><th>분류</th><th>사용 방식</th><th>오염 위험</th></tr>';
-  TASKS.forEach(t=>{
-    if(!t.seeds?.length) return;
-    t.seeds.forEach((s,i)=>{const cc=(s.contamination==='-'||(s.contamination||'').includes('없음'))?'seed-safe':'seed-risk';
-      h+=`<tr><td${i===0?' style="font-weight:600;color:#6c9fff;vertical-align:top" rowspan="'+t.seeds.length+'"':''}>${i===0?t.id+' '+t.name:''}</td><td style="font-weight:600">${s.name}</td><td><span class="seed-cat">${s.category}</span></td><td style="color:#aaa">${s.usage}</td><td class="${cc}">${s.contamination}</td></tr>`;});
-  });
-  h+='</table>';
-  return h;
-}
+// ══════════════════════════════════════
+//  전체 요약
+// ══════════════════════════════════════
+function ovDash(){
+  const tgt=T.reduce((a,t)=>a+(t.info?.target||0),0),min=T.reduce((a,t)=>a+(t.info?.minimum||0),0),done=T.reduce((a,t)=>a+(t.dataStats?.completed||0),0);
+  const nD=T.filter(t=>t.status==='done').length,nW=T.filter(t=>t.status==='wip').length,nWt=T.filter(t=>t.status==='wait').length;
+  let h=`<div class="info"><span class="k">태스크</span><span class="val">${T.length}개</span><span class="sep"></span><span class="k">목표</span><span class="val">${nm(tgt)}</span><span class="sep"></span><span class="k">최소</span><span class="val">${nm(min)}</span><span class="sep"></span><span class="k">완료</span><span class="val">${nm(done)} (${pct(done,tgt)}%)</span><span class="sep"></span><span class="k">상태</span><span class="val">${nD}완료/${nW}진행/${nWt}대기</span></div>`;
+  h+=`<div class="cards"><div class="card"><div class="v">${nm(tgt)}</div><div class="l">전체 목표</div></div><div class="card"><div class="v">${nm(min)}</div><div class="l">전체 최소</div></div><div class="card"><div class="v">${nm(done)}</div><div class="l">현재 완료</div></div><div class="card"><div class="v">${pct(done,tgt)}%</div><div class="l">진행률</div></div></div>`;
+  h+='<div class="section">태스크 목록</div><div class="tg">';
+  T.forEach(t=>{const p=pct(t.dataStats?.completed||0,t.info?.target||1);
+    h+=`<div class="tc" onclick="nav('${t.id}')"><div class="tc-head"><span class="tc-id">${t.id} · Tier ${t.info?.tier||'?'}</span>${bg(t.status)}</div><div class="tc-name">${t.name}</div><div class="tc-desc">${t.desc}</div><div class="tc-stats"><span>목표 <span class="val">${nm(t.info?.target)}</span></span><span>최소 <span class="val">${nm(t.info?.minimum)}</span></span><span>완료 <span class="val">${nm(t.dataStats?.completed)}</span></span></div><div class="prog"><div class="prog-label"><span>${p}%</span><span>${nm(t.dataStats?.completed)}/${nm(t.info?.target)}</span></div><div class="prog-bar"><div class="prog-fill" style="width:${p}%;background:${pc(p)}"></div></div></div></div>`;});
+  return h+'</div>';}
 
-// ── TASK — 시드 데이터 ──
-function rvSeeds(t){
-  if(!t.seeds?.length) return '<div class="empty-state">시드 데이터가 없습니다.</div>';
-  let h='<div class="section-title">시드 데이터</div>';
-  h+='<table class="seed-table"><tr><th>데이터셋</th><th>분류</th><th>사용 방식</th><th>오염 위험 비고</th></tr>';
-  t.seeds.forEach(s=>{const cc=(s.contamination==='-'||(s.contamination||'').includes('없음'))?'seed-safe':'seed-risk';
-    h+=`<tr><td style="font-weight:600">${s.name}</td><td><span class="seed-cat">${s.category}</span></td><td style="color:#aaa">${s.usage}</td><td class="${cc}">${s.contamination}</td></tr>`;});
-  h+='</table>';
-  return h;
-}
+function ovPipe(){
+  let h='<div class="section">파이프라인 진행 현황</div><table class="tbl"><tr><th>태스크</th><th>Tier</th><th>상태</th><th>시드 구축</th><th>시드 검증</th><th>대화 생성</th><th>품질 검증</th></tr>';
+  T.forEach(t=>{h+=`<tr><td><strong>${t.id}</strong> ${t.name}</td><td>Tier ${t.info?.tier||'?'}</td><td>${bg(t.status)}</td>`;
+    t.pipeline.forEach(p=>{const c={done:'done',wip:'wip',wait:'wait'}[p.status]||'wait';h+=`<td><span class="badge ${c}">${{done:'완료',wip:'진행중',wait:'대기'}[p.status]}</span></td>`;});h+='</tr>';});
+  h+='</table>';T.forEach(t=>{h+=`<div class="section">${t.id} ${t.name}</div>`+mkPipe(t.pipeline);});return h;}
 
-function rvOvPipe(){
-  let h='<div class="section-title">파이프라인 진행 현황</div><table class="ov-pipe-table"><tr><th>태스크</th><th>Tier</th><th>상태</th><th>시드 구축</th><th>시드 검증</th><th>대화 생성</th><th>품질 검증</th></tr>';
-  TASKS.forEach(t=>{h+=`<tr><td><strong>${t.id}</strong> ${t.name}</td><td>Tier ${t.info?.tier||'?'}</td><td>${badge(t.status)}</td>`;
-    t.pipeline.forEach(p=>h+=`<td><span class="mini-step ms-${p.status}">${{done:'완료',wip:'진행중',wait:'대기'}[p.status]}</span></td>`);h+='</tr>';});
-  h+='</table>';
-  TASKS.forEach(t=>{h+=`<div class="section-title">${t.id} ${t.name}</div>`+mkPipeline(t.pipeline);});
-  return h;
-}
-function rvOvSamples(){
-  let h='<div class="section-title">태스크별 대표 샘플</div>';
-  TASKS.forEach(t=>{h+=`<div class="section-title" style="font-size:.92em;color:#6c9fff;cursor:pointer" onclick="onNav('${t.id}')">${t.id} ${t.name} &rarr;</div>`;
-    if(!t.samples?.length){h+='<div class="empty-state" style="padding:20px">아직 샘플이 없습니다.</div>';return;}
-    h+=mkChat(t.samples[0],true);});
-  return h;
-}
+function ovSamp(){
+  let h='<div class="section">태스크별 대표 샘플</div>';
+  T.forEach(t=>{h+=`<div class="section" style="font-size:.9em;color:var(--accent);cursor:pointer" onclick="nav('${t.id}')">${t.id} ${t.name} →</div>`;
+    if(!t.samples?.length){h+='<div class="empty" style="padding:16px">아직 샘플이 없습니다.</div>';return;}h+=mkChat(t.samples[0],true);});return h;}
 
-// ── TASK DASHBOARD ──
-function rvDash(t){
+// ══════════════════════════════════════
+//  태스크 상세
+// ══════════════════════════════════════
+function tDash(t){
   const inf=t.info||{},ds=t.dataStats||{},p=pct(ds.completed||0,inf.target||1);
-  let h=`<div class="info-bar"><div class="info-item"><span class="il">Tier</span><span class="iv">${inf.tier||'?'}</span></div><div class="info-sep"></div><div class="info-item"><span class="il">목표</span><span class="iv">${num(inf.target)}</span></div><div class="info-sep"></div><div class="info-item"><span class="il">최소</span><span class="iv">${num(inf.minimum)}</span></div><div class="info-sep"></div><div class="info-item"><span class="il">언어</span><span class="iv">${inf.lang_ratio||'-'}</span></div><div class="info-sep"></div><div class="info-item"><span class="il">CoT</span><span class="iv">${inf.cot_ratio||'-'}</span></div></div>`;
-  h+=`<div class="stats-grid"><div class="stat-card"><div class="num">${num(ds.completed)}</div><div class="label">완료 (${p}%)</div></div><div class="stat-card"><div class="num">${ds.pass_rate||0}%</div><div class="label">통과율</div></div><div class="stat-card"><div class="num">${ds.avg_turns||'-'}</div><div class="label">평균 턴 수</div></div><div class="stat-card"><div class="num">${t.seeds?.length||0}</div><div class="label">시드 종류</div></div></div>`;
-  h+='<div class="section-title">시드 데이터</div><table class="seed-table"><tr><th>데이터셋</th><th>분류</th><th>사용 방식</th><th>오염 위험 비고</th></tr>';
-  (t.seeds||[]).forEach(s=>{const cc=s.contamination==='-'||(s.contamination||'').includes('없음')?'seed-safe':'seed-risk';
-    h+=`<tr><td style="font-weight:600">${s.name}</td><td><span class="seed-cat">${s.category}</span></td><td style="color:#aaa">${s.usage}</td><td class="${cc}">${s.contamination}</td></tr>`;});
-  h+='</table>';
 
+  // 기본정보 + 진척도
+  let h=`<div class="info"><span class="k">Tier</span><span class="val">${inf.tier||'?'}</span><span class="sep"></span><span class="k">목표</span><span class="val">${nm(inf.target)}</span><span class="sep"></span><span class="k">최소</span><span class="val">${nm(inf.minimum)}</span><span class="sep"></span><span class="k">언어</span><span class="val">${inf.lang_ratio||'-'}</span><span class="sep"></span><span class="k">CoT</span><span class="val">${inf.cot_ratio||'-'}</span></div>`;
+  h+=`<div class="cards"><div class="card"><div class="v">${nm(ds.completed)}</div><div class="l">완료 (${p}%)</div></div><div class="card"><div class="v">${ds.pass_rate||0}%</div><div class="l">통과율</div></div><div class="card"><div class="v">${ds.avg_turns||'-'}</div><div class="l">평균 턴 수</div></div><div class="card"><div class="v">${t.seeds?.length||0}</div><div class="l">시드 종류</div></div></div>`;
+
+  // 시드 데이터
+  if(t.seeds?.length){h+='<div class="section">시드 데이터</div><table class="tbl"><tr><th>데이터셋</th><th>분류</th><th>사용 방식</th><th>오염 위험</th></tr>';
+    t.seeds.forEach(s=>{const cc=(s.contamination==='-'||(s.contamination||'').includes('없음'))?'safe':'risk';
+      h+=`<tr><td style="font-weight:600">${s.name}</td><td><span class="cat">${s.category}</span></td><td style="color:#aaa">${s.usage}</td><td class="${cc}">${s.contamination}</td></tr>`;});h+='</table>';}
+
+  // 횡단차원 bar chart
   if(t.crossDims?.length){
-    const totalSamples=ds.completed||1;
-    const targetMode=inferDimValueMode(t.crossDims,totalSamples,'target');
-    const actualMode=inferDimValueMode(t.crossDims,totalSamples,'actual');
-    h+='<div class="section-title">횡단차원 매트릭스</div>';
-    // Target vs Actual 비교 차트
-    h+='<div class="dim-chart-wrap">';
+    const total=ds.completed||1;
+    h+='<div class="section">횡단차원 매트릭스</div><div class="dim-wrap">';
     t.crossDims.forEach(d=>{
-      const target=dimValue(d,totalSamples,'target',targetMode);
-      const actual=dimValue(d,totalSamples,'actual',actualMode);
-      const cls=actual.count===0?'actual-under':Math.abs(actual.pct-target.pct)<=3?'actual-ok':actual.pct<target.pct?'actual-under':'actual-over';
-      const maxPct=Math.max(target.pct,actual.pct,1);
-      h+=`<div class="dim-chart-row"><span class="dim-chart-label">${d.name}</span><div class="dim-chart-bars">`;
-      h+=`<div class="dim-chart-bar-row"><span class="dim-chart-tag">목표</span><div class="dim-chart-bar-bg"><div class="dim-chart-bar target" style="width:${target.pct/maxPct*100}%"></div></div><span class="dim-chart-val">${target.pct}% (${num(target.count)}건)</span></div>`;
-      h+=`<div class="dim-chart-bar-row"><span class="dim-chart-tag">실제</span><div class="dim-chart-bar-bg"><div class="dim-chart-bar ${cls}" style="width:${actual.pct/maxPct*100}%"></div></div><span class="dim-chart-val">${actual.pct}% (${num(actual.count)}건)</span></div>`;
-      h+=`</div></div>`;});
-    h+='<div class="dim-chart-legend"><span style="color:#555">&#9632; 목표</span><span style="color:#4ecdc4">&#9632; 달성</span><span style="color:#ffd93d">&#9632; 미달</span><span style="color:#6c9fff">&#9632; 초과</span></div>';
-    h+='</div>';
+      const cls=d.actual===0?'var(--yellow)':Math.abs(d.actual-d.target)<=3?'var(--teal)':d.actual<d.target?'var(--yellow)':'var(--accent)';
+      const mx=Math.max(d.target,d.actual,1);
+      h+=`<div class="dim-row"><span class="dim-name">${d.name}</span><div class="dim-bars"><div class="dim-bar-row"><span class="dim-tag">목표</span><div class="dim-bar-bg"><div class="dim-bar-fill" style="width:${d.target/mx*100}%;background:#555"></div></div><span class="dim-val">${d.target}% (${Math.round(d.target*total/100)}건)</span></div><div class="dim-bar-row"><span class="dim-tag">실제</span><div class="dim-bar-bg"><div class="dim-bar-fill" style="width:${d.actual/mx*100}%;background:${cls}"></div></div><span class="dim-val">${d.actual}% (${Math.round(d.actual*total/100)}건)</span></div></div></div>`;});
+    h+='<div class="dim-legend"><span>■ 목표</span><span style="color:var(--teal)">■ 달성</span><span style="color:var(--yellow)">■ 미달</span><span style="color:var(--accent)">■ 초과</span></div></div>';}
 
-    // 턴 수 분포 차트
-    const hasTurnDist=t.crossDims.some(d=>Object.keys(d.turnDist||{}).length);
-    if(hasTurnDist){
-      h+='<div class="chart-wrap"><div class="chart-title">횡단차원별 턴 수 분포</div><div class="turn-small-grid">';
-      t.crossDims.forEach((d,i)=>{
-        const entries=Object.entries(d.turnDist||{}).map(([k,v])=>[+k,+v||0]).sort((a,b)=>a[0]-b[0]);
-        const tot=turnTotal(d), pctOfTotal=totalSamples?Math.round(tot/totalSamples*100):0;
-        const maxV=Math.max(...entries.map(([,v])=>v),1), color=DIM_COLORS[i%DIM_COLORS.length];
-        h+=`<div class="turn-card"><div class="turn-card-head"><span class="turn-card-title">${d.name}</span><span class="turn-card-total">${num(tot)}건 (${pctOfTotal}%)</span></div>`;
-        if(entries.length){
-          h+='<div class="turn-bars">';
-          entries.forEach(([tn,v])=>{const hp=Math.max(Math.round(v/maxV*100),v?4:0);
-            h+=`<div class="turn-col" title="${tn}턴: ${v}건"><div class="turn-bar" style="height:${hp}%;background:${color}"></div><div class="turn-label">${tn}</div></div>`;});
-          h+='</div>';
-        }else h+='<div class="turn-empty">턴 분포 없음</div>';
-        h+='</div>';
-      });
-      h+='</div></div>';}}
-
-  // 분포 차트
-  h+='<div class="section-title">분포</div><div class="dist-wrap">';
-
-  // 언어 분포 — 도넛 + 바
+  // 언어 + CoT 도넛
+  h+='<div class="section">분포</div><div class="donut-section">';
   if(ds.lang&&Object.keys(ds.lang).length){
-    const lE=Object.entries(ds.lang),lT=lE.reduce((a,[,v])=>a+v,0),lC={KO:'#4ecdc4',EN:'#ff6b6b',ko:'#4ecdc4',en:'#ff6b6b'};
-    h+='<div class="dist-section"><div class="dist-header">언어 분포</div><div class="dist-visual">';
-    // 도넛
-    h+=mkRing(lE,lT,lC);
-    // 범례 + 바
-    h+='<div class="dist-legend">';
-    lE.forEach(([k,v])=>{const w=pct(v,lT);
-      h+=`<div class="dist-legend-item"><span class="dist-legend-dot" style="background:${lC[k]||'#6c9fff'}"></span><span class="dist-legend-name">${k}</span><div class="dist-legend-bar"><div class="dist-legend-fill" style="width:${w}%;background:${lC[k]||'#6c9fff'}"></div></div><span class="dist-legend-val">${v}건 (${w}%)</span></div>`;});
+    const lE=Object.entries(ds.lang),lT=lE.reduce((a,[,v])=>a+v,0),lC={KO:'#4ecdc4',EN:'#ff6b6b'};
+    h+=`<div class="donut-card"><div class="donut-title">언어 분포</div><div class="donut-body">${donut(lE,lT,lC)}<div class="donut-legend">`;
+    lE.forEach(([k,v])=>h+=`<div class="donut-item"><span class="donut-dot" style="background:${lC[k]||'#6c9fff'}"></span><span class="donut-label">${k}</span><span class="donut-val">${v}건 (${pct(v,lT)}%)</span></div>`);
     h+='</div></div></div>';}
-
-  // CoT 분포 — 도넛 + 바
   if(ds.cot&&Object.values(ds.cot).some(v=>v)){
     const cE=Object.entries(ds.cot),cT=cE.reduce((a,[,v])=>a+v,0),cC={think:'#4ecdc4',no_think:'#ff6b6b'};
-    h+='<div class="dist-section"><div class="dist-header">CoT 분포</div><div class="dist-visual">';
-    h+=mkRing(cE,cT,cC);
-    h+='<div class="dist-legend">';
-    cE.forEach(([k,v])=>{const w=pct(v,cT);
-      h+=`<div class="dist-legend-item"><span class="dist-legend-dot" style="background:${cC[k]||'#6c9fff'}"></span><span class="dist-legend-name">${k}</span><div class="dist-legend-bar"><div class="dist-legend-fill" style="width:${w}%;background:${cC[k]||'#6c9fff'}"></div></div><span class="dist-legend-val">${v}건 (${w}%)</span></div>`;});
+    h+=`<div class="donut-card"><div class="donut-title">CoT 분포</div><div class="donut-body">${donut(cE,cT,cC)}<div class="donut-legend">`;
+    cE.forEach(([k,v])=>h+=`<div class="donut-item"><span class="donut-dot" style="background:${cC[k]||'#6c9fff'}"></span><span class="donut-label">${k}</span><span class="donut-val">${v}건 (${pct(v,cT)}%)</span></div>`);
     h+='</div></div></div>';}
-
-  // 도메인 분포
-  if(ds.domains?.length){
-    const dT=ds.domains.reduce((a,d)=>a+d.count,0);
-    h+='<div class="dist-section"><div class="dist-header">도메인/카테고리 분포</div><div class="domain-grid">';
-    ds.domains.sort((a,b)=>b.count-a.count).forEach((d,i)=>{const w=pct(d.count,dT);
-      h+=`<div class="domain-chip" style="border-left:3px solid ${DIM_COLORS[i%DIM_COLORS.length]}"><span class="dc-n">${d.name}</span><span class="dc-v">${d.count}건 (${w}%)</span></div>`;});
-    h+='</div></div>';}
   h+='</div>';
 
-  if(t.issues?.length){h+='<div class="section-title">이슈</div><div class="issue-list">';
-    t.issues.forEach(i=>h+=`<div class="issue-item"><span class="issue-sev ${i.severity}">${i.severity.toUpperCase()}</span><span class="issue-text">${i.text}</span><span class="issue-date">${i.date}</span></div>`);h+='</div>';}
-  return h;
-}
-
-// ── TASK PIPELINE ──
-function mkPipeline(steps){
-  // 상단: 단계 박스 (이름 + 상태만)
-  let h='<div class="pipeline">';
-  steps.forEach((p,i)=>{if(i)h+='<div class="pipe-arrow">&rarr;</div>';
-    h+=`<div class="pipe-step p-${p.status}"><div class="step-num">${p.phase}</div><div class="step-name">${p.name}</div><div class="step-badge">${badge(p.status)}</div></div>`;});
-  h+='</div>';
-  // 하단: 상세 설명 테이블
-  h+='<table class="seed-table" style="margin-top:12px"><tr><th>단계</th><th>이름</th><th>상태</th><th>상세 설명</th></tr>';
-  steps.forEach(p=>{
-    h+=`<tr><td style="color:#6c9fff;font-weight:600">${p.phase}</td><td style="font-weight:600">${p.name}</td><td>${badge(p.status)}</td><td style="color:#aaa">${esc(p.detail)}</td></tr>`;});
-  h+='</table>';
+  // 이슈
+  if(t.issues?.length){h+='<div class="section">이슈</div><div class="iss">';
+    t.issues.forEach(i=>h+=`<div class="iss-item"><span class="iss-sev ${i.severity}">${i.severity.toUpperCase()}</span><span class="iss-text">${i.text}</span><span class="iss-date">${i.date}</span></div>`);h+='</div>';}
   return h;}
-function rvPipe(t){
-  const dn=t.pipeline.filter(p=>p.status==='done').length;
-  let h=`<div class="section-title">구축 프로세스 (${dn}/${t.pipeline.length} 완료)</div>`+mkPipeline(t.pipeline);
-  if(t.issues?.length){h+='<div class="section-title">이슈</div><div class="issue-list">';
-    t.issues.forEach(i=>h+=`<div class="issue-item"><span class="issue-sev ${i.severity}">${i.severity.toUpperCase()}</span><span class="issue-text">${i.text}</span><span class="issue-date">${i.date}</span></div>`);h+='</div>';}
-  return h;
-}
 
-// ── TASK SAMPLES ──
-function rvSamples(t){
-  if(!t.samples?.length)return'<div class="empty-state">아직 구축된 샘플이 없습니다.</div>';
-  let h='<div class="sample-selector">';
-  t.samples.forEach((s,i)=>h+=`<div class="sample-btn ${i===0?'active':''}" onclick="showSample('${t.id}',${i},this)">${s.label}</div>`);
+// ── 파이프라인 ──
+function mkPipe(steps){
+  let h='<div class="pipe">';
+  steps.forEach((p,i)=>{if(i)h+='<div class="pipe-arr">→</div>';
+    h+=`<div class="pipe-step p-${p.status}"><div class="sn">${p.phase}</div><div class="nm">${p.name}</div><div class="bd">${bg(p.status)}</div></div>`;});
+  h+='</div><table class="tbl"><tr><th>단계</th><th>이름</th><th>상태</th><th>상세</th></tr>';
+  steps.forEach(p=>h+=`<tr><td style="color:var(--accent);font-weight:600">${p.phase}</td><td style="font-weight:600">${p.name}</td><td>${bg(p.status)}</td><td style="color:#aaa">${esc(p.detail)}</td></tr>`);
+  return h+'</table>';}
+function tPipe(t){
+  const dn=t.pipeline.filter(p=>p.status==='done').length;
+  let h=`<div class="section">구축 프로세스 (${dn}/${t.pipeline.length} 완료)</div>`+mkPipe(t.pipeline);
+  if(t.issues?.length){h+='<div class="section">이슈</div><div class="iss">';
+    t.issues.forEach(i=>h+=`<div class="iss-item"><span class="iss-sev ${i.severity}">${i.severity.toUpperCase()}</span><span class="iss-text">${i.text}</span><span class="iss-date">${i.date}</span></div>`);h+='</div>';}return h;}
+
+// ── 구축 예시 ──
+function tSamp(t){
+  if(!t.samples?.length)return'<div class="empty">아직 구축된 샘플이 없습니다.</div>';
+  let h='<div class="samp-sel">';
+  t.samples.forEach((s,i)=>h+=`<div class="samp-btn ${i===0?'on':''}" onclick="showS('${t.id}',${i},this)">${s.label}</div>`);
   return h+'</div><div id="sv">'+mkChat(t.samples[0],true)+'</div>';}
-function showSample(tid,idx,el){document.querySelectorAll('.sample-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');
-  document.getElementById('sv').innerHTML=mkChat(TASKS.find(t=>t.id===tid).samples[idx],true);}
-function mkChat(sample,showTags){let h='';
-  if(showTags&&sample.tags){h+='<div class="meta-bar">';sample.tags.forEach(t=>h+=`<div class="meta-tag ${t.style||''}">${t.text}</div>`);h+='</div>';}
-  h+='<div class="chat-area">';
-  (sample.messages||[]).forEach(m=>{if(m.role==='system')h+=`<div class="msg system" onclick="this.classList.toggle('expanded')"><div class="role">SYSTEM</div><div class="content">${esc(m.content)}</div></div>`;
-    else{const rc=m.role==='user'?'user-role':'asst-role',rn=m.role==='user'?'USER':'ASSISTANT';
-      h+=`<div class="msg"><div class="role ${rc}">${rn}</div><div class="content">${mkThink(m.content)}</div></div>`;}});
+function showS(tid,idx,el){document.querySelectorAll('.samp-btn').forEach(b=>b.classList.remove('on'));el.classList.add('on');
+  document.getElementById('sv').innerHTML=mkChat(T.find(t=>t.id===tid).samples[idx],true);}
+function mkChat(s,tags){let h='';
+  if(tags&&s.tags){h+='<div class="meta">';s.tags.forEach(t=>h+=`<div class="meta-tag ${t.style||''}">${t.text}</div>`);h+='</div>';}
+  h+='<div class="chat">';
+  (s.messages||[]).forEach(m=>{
+    if(m.role==='system')h+=`<div class="msg sys" onclick="this.classList.toggle('open')"><div class="role" style="color:var(--accent)">SYSTEM</div><div class="ct">${esc(m.content)}</div></div>`;
+    else{const rc=m.role==='user'?'u':'a',rn=m.role==='user'?'USER':'ASSISTANT';
+      h+=`<div class="msg"><div class="role ${rc}">${rn}</div><div class="ct">${mkThink(m.content)}</div></div>`;}});
   return h+'</div>';}
-function mkThink(text){if(!text)return'';const parts=[];let last=0;const re=/<think>([\s\S]*?)<\/think>/g;let m;
-  while((m=re.exec(text))!==null){if(m.index>last)parts.push(esc(text.slice(last,m.index)));parts.push('<div class="think-block">'+esc(m[1])+'</div>');last=re.lastIndex;}
-  if(last<text.length)parts.push(esc(text.slice(last)));return parts.join('');}
+function mkThink(t){if(!t)return'';const p=[];let l=0;const re=/<think>([\s\S]*?)<\/think>/g;let m;
+  while((m=re.exec(t))!==null){if(m.index>l)p.push(esc(t.slice(l,m.index)));p.push('<div class="think">'+esc(m[1])+'</div>');l=re.lastIndex;}
+  if(l<t.length)p.push(esc(t.slice(l)));return p.join('');}
 </script>
 </body>
 </html>
