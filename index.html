@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SFT 데이터 구축 대시보드</title>
 <style>
-:root{--bg:#f5f6f8;--card:#fff;--border:#e2e5ea;--text:#1a1a1a;--dim:#777;--accent:#3b82f6;--teal:#10b981;--coral:#ef4444;--yellow:#f59e0b;--purple:#8b5cf6;--card-shadow:0 1px 3px rgba(0,0,0,.08)}
+:root{--bg:#f5f6f8;--card:#fff;--border:#e2e5ea;--text:#111;--dim:#555;--accent:#3b82f6;--teal:#059669;--coral:#dc2626;--yellow:#d97706;--purple:#7c3aed;--card-shadow:0 1px 3px rgba(0,0,0,.08)}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
 
@@ -48,7 +48,7 @@ body{font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;b
 
 .tbl{width:100%;border-collapse:collapse;margin:10px 0;font-size:.84em}
 .tbl th{background:#f8f9fa;color:var(--accent);text-align:left;padding:8px 12px;border-bottom:2px solid var(--border);font-weight:600}
-.tbl td{padding:8px 12px;border-bottom:1px solid #f0f0f0;color:#555}
+.tbl td{padding:8px 12px;border-bottom:1px solid #f0f0f0;color:#333}
 .tbl tr:hover{background:#f8f9fb}
 .tbl .safe{color:var(--teal)}.tbl .risk{color:var(--yellow)}
 .tbl .cat{color:var(--teal);font-size:.78em;font-weight:600}
@@ -72,7 +72,7 @@ body{font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;b
 
 .donut-section{display:flex;gap:20px;flex-wrap:wrap;margin:12px 0}
 .donut-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;flex:1;min-width:260px;box-shadow:var(--card-shadow)}
-.donut-title{font-size:.84em;color:#555;font-weight:600;margin-bottom:10px}
+.donut-title{font-size:.84em;color:#333;font-weight:600;margin-bottom:10px}
 .donut-body{display:flex;align-items:center;gap:16px}
 .donut-ring{position:relative;width:80px;height:80px;flex-shrink:0}
 .donut-ring svg{transform:rotate(-90deg)}
@@ -82,7 +82,7 @@ body{font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;b
 .donut-legend{flex:1;display:flex;flex-direction:column;gap:6px}
 .donut-item{display:flex;align-items:center;gap:8px;font-size:.84em}
 .donut-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
-.donut-label{color:#555;flex:1}
+.donut-label{color:#333;flex:1}
 .donut-val{color:var(--text);font-weight:600}
 
 .pipe{display:flex;align-items:center;gap:7px;margin:14px 0;overflow-x:auto;padding:6px 0}
@@ -214,15 +214,23 @@ function tDash(t){
       h+=`<tr id="seed-${t.id}-${i}" style="display:none"><td colspan="4"><div class="seed-expand"><pre style="white-space:pre-wrap;font-size:.85em;color:#555">${esc(s.sample||'아직 샘플 데이터가 없습니다. (파이프라인 sync 시 자동 채워짐)')}</pre></div></td></tr>`;});
     h+='</table>';}
 
-  // 횡단차원
+  // 횡단차원 바 차트
   if(t.crossDims?.length){
-    const total=ds.completed||1;
+    const total=ds.completed||0;
     h+='<div class="section">횡단차원 매트릭스</div><div class="dim-wrap">';
-    t.crossDims.forEach(d=>{
-      const cls=d.actual===0?'var(--yellow)':Math.abs(d.actual-d.target)<=3?'var(--teal)':d.actual<d.target?'var(--yellow)':'var(--accent)';
-      const mx=Math.max(d.target,d.actual,1);
-      h+=`<div class="dim-row"><span class="dim-name">${d.name}</span><div class="dim-bars"><div class="dim-bar-row"><span class="dim-tag">목표</span><div class="dim-bar-bg"><div class="dim-bar-fill" style="width:${d.target/mx*100}%;background:#ccc"></div></div><span class="dim-val">${d.target}%</span></div><div class="dim-bar-row"><span class="dim-tag">실제</span><div class="dim-bar-bg"><div class="dim-bar-fill" style="width:${d.actual/mx*100}%;background:${cls}"></div></div><span class="dim-val">${d.actual}%</span></div></div></div>`;});
-    h+='<div class="dim-legend"><span style="color:#ccc">■ 목표</span><span style="color:var(--teal)">■ 달성</span><span style="color:var(--yellow)">■ 미달</span><span style="color:var(--accent)">■ 초과</span></div></div>';}
+    const maxPct=Math.max(...t.crossDims.map(d=>Math.max(d.target,d.actual)),1);
+    t.crossDims.forEach((d,i)=>{
+      const actualCount=total?Math.round(d.actual*total/100):0;
+      const targetCount=total?Math.round(d.target*total/100):0;
+      const color=DC[i%DC.length];
+      h+=`<div style="margin:12px 0"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px"><span style="font-weight:600;font-size:.88em;color:#333">${d.name}</span><span style="font-size:.78em;color:#666">목표 ${d.target}%${total?' ('+targetCount+'건)':''} | 실제 ${d.actual}%${total?' ('+actualCount+'건)':''}</span></div>`;
+      h+=`<div style="position:relative;height:24px;background:#f0f0f0;border-radius:5px;overflow:hidden">`;
+      h+=`<div style="height:100%;width:${d.actual}%;background:${color};border-radius:5px;transition:width .3s"></div>`;
+      h+=`<div style="position:absolute;top:0;bottom:0;left:${d.target}%;width:2px;background:#333;opacity:.4"></div>`;
+      h+=`</div></div>`;});
+    h+='<div class="dim-legend"><span style="color:#333">│ 목표선</span>';
+    t.crossDims.forEach((d,i)=>h+=`<span style="color:${DC[i%DC.length]}">■ ${d.name}</span>`);
+    h+='</div></div>';}
 
   // 언어 + CoT 도넛 (항상 표시)
   h+='<div class="section">분포</div><div class="donut-section">';
