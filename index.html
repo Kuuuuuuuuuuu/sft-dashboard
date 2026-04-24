@@ -213,8 +213,9 @@ function nav(id){cur=id;document.querySelectorAll('.sb-item').forEach(e=>e.class
   else{const t=T.find(x=>x.id===id);document.getElementById('pgT').textContent=`${t.id} ${t.name}`;document.getElementById('pgD').textContent=t.desc;}render();}
 function tab(t,el){ctab=t;document.querySelectorAll('.tab').forEach(e=>e.classList.remove('on'));el.classList.add('on');render();}
 function render(){const el=document.getElementById('ct');
-  if(cur==='__all__')el.innerHTML={dash:ovDash,pipe:ovPipe,samp:ovSamp}[ctab]();
-  else{const t=T.find(x=>x.id===cur);if(!t)return;el.innerHTML={dash:()=>tDash(t),pipe:()=>tPipe(t),samp:()=>tSamp(t)}[ctab]();}}
+  const tabsEl=document.getElementById('tabs');
+  if(cur==='__all__'){tabsEl.style.display='none';el.innerHTML=ovDash();}
+  else{tabsEl.style.display='flex';const t=T.find(x=>x.id===cur);if(!t)return;el.innerHTML={dash:()=>tDash(t),pipe:()=>tPipe(t),samp:()=>tSamp(t)}[ctab]();}}
 
 // ══════════════════════════════════════
 //  전체 요약
