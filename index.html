@@ -105,7 +105,7 @@ body{font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;b
 .samp-btn:hover{border-color:var(--accent)}
 .meta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
 .meta-tag{background:#f8f9fa;border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:.74em}
-.meta-tag.accent{border-color:var(--accent);color:var(--accent)}.meta-tag.teal{border-color:var(--teal);color:var(--teal)}.meta-tag.coral{border-color:var(--coral);color:var(--coral)}.meta-tag.yellow{border-color:var(--yellow);color:var(--yellow)}
+.meta-tag.accent{border-color:var(--accent);color:var(--accent)}.meta-tag.teal{border-color:var(--teal);color:var(--teal)}.meta-tag.coral{border-color:var(--coral);color:var(--coral)}.meta-tag.yellow{border-color:var(--yellow);color:var(--yellow)}.meta-tag.purple{border-color:var(--purple);color:var(--purple)}
 .chat{background:#f8f9fa;border:1px solid var(--border);border-radius:9px;padding:16px;max-height:550px;overflow-y:auto}
 .msg{margin-bottom:12px}
 .msg.sys{background:#fff;border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:6px;padding:10px 12px;font-size:.8em;color:#666;max-height:110px;overflow:hidden;cursor:pointer;transition:max-height .3s;line-height:1.5}
@@ -266,20 +266,54 @@ function tPipe(t){
     t.issues.forEach(i=>h+=`<div class="iss-item"><span class="iss-sev ${i.severity}">${i.severity.toUpperCase()}</span><span class="iss-text">${i.text}</span><span class="iss-date">${i.date}</span></div>`);h+='</div>';}return h;}
 
 function tSamp(t){
-  if(!t.samples?.length)return'<div class="empty">아직 구축된 샘플이 없습니다.</div>';
+  if(!t.samples?.length)return'<div class="empty">아직 구축된 샘플이 없습니다.<br><span style="font-size:.82em;color:#999">횡단차원별 1건씩 (멀티턴 변형 / 장문맥 / 부정적 지시 / 출력 형식 제어)</span></div>';
+  // 횡단차원별 버튼
   let h='<div class="samp-sel">';
-  t.samples.forEach((s,i)=>h+=`<div class="samp-btn ${i===0?'on':''}" onclick="showS('${t.id}',${i},this)">${s.label}</div>`);
-  return h+'</div><div id="sv">'+mkChat(t.samples[0],true)+'</div>';}
+  t.samples.forEach((s,i)=>{
+    const cc=(s.cross_cutting||[])[0]||'';
+    const dimLabel={'multi_turn':'멀티턴 변형','long_context':'장문맥','negative_instruction':'부정적 지시','output_format':'출력 형식 제어'}[cc]||s.label||cc;
+    const lang=(s.language||'').toUpperCase();
+    h+=`<div class="samp-btn ${i===0?'on':''}" onclick="showS('${t.id}',${i},this)">${dimLabel}${lang?' · '+lang:''}</div>`;});
+  return h+'</div><div id="sv">'+mkSamp(t.samples[0])+'</div>';}
 function showS(tid,idx,el){document.querySelectorAll('.samp-btn').forEach(b=>b.classList.remove('on'));el.classList.add('on');
-  document.getElementById('sv').innerHTML=mkChat(T.find(t=>t.id===tid).samples[idx],true);}
-function mkChat(s,tags){let h='';
-  if(tags&&s.tags){h+='<div class="meta">';s.tags.forEach(t=>h+=`<div class="meta-tag ${t.style||''}">${t.text}</div>`);h+='</div>';}
+  document.getElementById('sv').innerHTML=mkSamp(T.find(t=>t.id===tid).samples[idx]);}
+function mkSamp(s){
+  let h='';
+  // 메타 태그 (자동 생성)
+  const tags=[];
+  if(s.cross_cutting?.length){const dl={'multi_turn':'멀티턴 변형','long_context':'장문맥','negative_instruction':'부정적 지시','output_format':'출력 형식 제어'};
+    s.cross_cutting.forEach(c=>tags.push({text:dl[c]||c,style:'yellow'}));}
+  if(s.language)tags.push({text:s.language.toUpperCase(),style:'accent'});
+  if(s.cot_mode)tags.push({text:s.cot_mode,style:s.cot_mode==='think'?'teal':'coral'});
+  if(s.metadata?.domain)tags.push({text:s.metadata.domain,style:'purple'});
+  // 수동 태그도 지원
+  if(!tags.length&&s.tags)s.tags.forEach(t=>tags.push(t));
+  if(tags.length){h+='<div class="meta">';tags.forEach(t=>h+=`<div class="meta-tag ${t.style||''}">${t.text}</div>`);h+='</div>';}
+
+  // 메타데이터 카드
+  const m=s.metadata||{};
+  const av=m.auto_validation||{};
+  const qv=m.quality_validation||{};
+  if(m.persona_name_ko||m.persona_name_en||m.domain||qv.score){
+    h+='<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">';
+    if(m.persona_name_ko||m.persona_name_en)h+=`<div class="card" style="flex:1;min-width:140px;text-align:left;padding:10px 14px"><div class="l">페르소나</div><div style="font-weight:600;font-size:.9em;margin-top:2px">${m.persona_name_ko||''}</div><div style="color:var(--dim);font-size:.78em">${m.persona_name_en||''}</div></div>`;
+    if(m.domain)h+=`<div class="card" style="flex:1;min-width:100px"><div class="v" style="font-size:1.1em">${m.domain}</div><div class="l">도메인</div></div>`;
+    if(qv.score)h+=`<div class="card" style="flex:1;min-width:100px"><div class="v" style="font-size:1.1em;color:${qv.score>=4?'var(--teal)':qv.score>=3?'var(--yellow)':'var(--coral)'}">${qv.score}/5</div><div class="l">품질 점수</div></div>`;
+    if(av.format_ok!==undefined)h+=`<div class="card" style="flex:1;min-width:100px"><div class="v" style="font-size:1.1em;color:${av.format_ok?'var(--teal)':'var(--coral)'}">${av.format_ok?'PASS':'FAIL'}</div><div class="l">포맷 검증</div></div>`;
+    h+='</div>';}
+
+  // 대화
   h+='<div class="chat">';
-  (s.messages||[]).forEach(m=>{
-    if(m.role==='system')h+=`<div class="msg sys" onclick="this.classList.toggle('open')"><div class="role" style="color:var(--accent)">SYSTEM</div><div class="ct">${esc(m.content)}</div></div>`;
-    else{const rc=m.role==='user'?'u':'a',rn=m.role==='user'?'USER':'ASSISTANT';
-      h+=`<div class="msg"><div class="role ${rc}">${rn}</div><div class="ct">${mkThink(m.content)}</div></div>`;}});
-  return h+'</div>';}
+  (s.messages||[]).forEach(msg=>{
+    if(msg.role==='system')h+=`<div class="msg sys" onclick="this.classList.toggle('open')"><div class="role" style="color:var(--accent)">SYSTEM</div><div class="ct">${esc(msg.content)}</div></div>`;
+    else{const rc=msg.role==='user'?'u':'a',rn=msg.role==='user'?'USER':'ASSISTANT';
+      h+=`<div class="msg"><div class="role ${rc}">${rn}</div><div class="ct">${mkThink(msg.content)}</div></div>`;}});
+  h+='</div>';
+
+  // 검증 이슈
+  if(qv.issues?.length){h+='<div style="margin-top:12px"><div style="font-size:.82em;font-weight:600;color:#333;margin-bottom:6px">검증 코멘트</div>';
+    qv.issues.forEach(issue=>h+=`<div style="font-size:.78em;color:#666;padding:3px 0;border-bottom:1px solid #f0f0f0">· ${issue}</div>`);h+='</div>';}
+  return h;}
 function mkThink(t){if(!t)return'';const p=[];let l=0;const re=/<think>([\s\S]*?)<\/think>/g;let m;
   while((m=re.exec(t))!==null){if(m.index>l)p.push(esc(t.slice(l,m.index)));p.push('<div class="think">'+esc(m[1])+'</div>');l=re.lastIndex;}
   if(l<t.length)p.push(esc(t.slice(l)));return p.join('');}
