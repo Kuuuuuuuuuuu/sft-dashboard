@@ -97,6 +97,16 @@ body{font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;b
 .chart-legend{display:flex;gap:16px;margin-top:12px;flex-wrap:wrap;justify-content:center}
 .chart-legend-item{font-size:.78em;color:#aaa;display:flex;align-items:center;gap:5px}
 .chart-legend-dot{width:10px;height:10px;border-radius:2px}
+.turn-small-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.turn-card{background:#12141a;border:1px solid #2a2d35;border-radius:8px;padding:14px 14px 12px}
+.turn-card-head{display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:10px}
+.turn-card-title{font-size:.82em;color:#ddd;font-weight:700}
+.turn-card-total{font-size:.75em;color:#888;white-space:nowrap}
+.turn-bars{display:flex;align-items:flex-end;gap:6px;height:118px;border-left:1px solid #2a2d35;border-bottom:1px solid #2a2d35;padding:0 6px}
+.turn-col{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;flex:1;min-width:20px;height:100%}
+.turn-bar{width:100%;max-width:24px;min-height:2px;border-radius:3px 3px 0 0}
+.turn-label{font-size:.68em;color:#777;margin-top:6px}
+.turn-empty{color:#666;font-size:.8em;padding:28px 0;text-align:center}
 
 /* Distribution */
 .dist-wrap{margin:16px 0;padding:20px;background:#1a1d25;border:1px solid #2a2d35;border-radius:8px}
@@ -151,10 +161,10 @@ body{font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;b
 .meta-tag.accent{border-color:#6c9fff;color:#6c9fff}.meta-tag.teal{border-color:#4ecdc4;color:#4ecdc4}.meta-tag.coral{border-color:#ff6b6b;color:#ff6b6b}.meta-tag.yellow{border-color:#ffd93d;color:#ffd93d}
 .chat-area{background:#1a1d25;border-radius:10px;padding:18px;max-height:550px;overflow-y:auto}
 .msg{margin-bottom:14px}
-.msg.system{background:#12141a;border-radius:7px;padding:10px;font-size:.78em;color:#666;max-height:70px;overflow:hidden;cursor:pointer;transition:max-height .3s}
-.msg.system.expanded{max-height:3000px}
-.msg.system::after{content:'(클릭하여 펼치기)';display:block;color:#444;font-size:.76em;margin-top:3px}
-.msg.system.expanded::after{content:'(클릭하여 접기)'}
+.msg.system{background:#12141a;border:1px solid #2a2d35;border-left:3px solid #6c9fff;border-radius:7px;padding:12px 14px;font-size:.82em;color:#999;max-height:120px;overflow:hidden;cursor:pointer;transition:max-height .3s;line-height:1.6}
+.msg.system.expanded{max-height:5000px}
+.msg.system::after{content:'... (클릭하여 전체 보기)';display:block;color:#6c9fff;font-size:.76em;margin-top:6px;font-weight:600}
+.msg.system.expanded::after{content:'(클릭하여 접기)';color:#555}
 .msg .role{font-size:.7em;font-weight:700;margin-bottom:3px}
 .msg .role.user-role{color:#4ecdc4}.msg .role.asst-role{color:#ff6b6b}
 .msg .content{line-height:1.6;font-size:.86em;white-space:pre-wrap}
@@ -244,6 +254,27 @@ async function loadFromSheets(){
 
 function parseLangRatio(s){const m=s.match(/(\d+)\s*:\s*(\d+)/);if(!m)return{};if(s.includes('EN:KO'))return{EN:+m[1],KO:+m[2]};if(s.includes('KO'))return{KO:100};return{EN:+m[1],KO:+m[2]};}
 function parseCotRatio(s){const t=s.match(/think\s*(\d+)/i);const n=s.match(/no_think\s*(\d+)/i);return{think:t?+t[1]:0,no_think:n?+n[1]:0};}
+
+function inferDimValueMode(dims,total,field){
+  const vals=(dims||[]).map(d=>+d[field]||0).filter(v=>v>0);
+  if(!vals.length)return'percent';
+  const sum=vals.reduce((a,v)=>a+v,0);
+  if(total>0&&Math.abs(sum-total)<=Math.max(1,total*.03))return'count';
+  if(vals.some(v=>v>100))return'count';
+  if(total>0&&vals.some(v=>v>total))return'percent';
+  if(sum<=100&&vals.every(v=>v<=100))return'percent';
+  return'count';
+}
+function dimValue(d,total,field,mode){
+  const raw=+d[field]||0;
+  if(mode==='count'){
+    const count=raw;
+    return{raw,count,pct:total?Math.round(count/total*100):0};
+  }
+  const pctVal=raw;
+  return{raw,count:total?Math.round(pctVal*total/100):0,pct:Math.round(pctVal)};
+}
+function turnTotal(d){return Object.values(d.turnDist||{}).reduce((a,v)=>a+(+v||0),0);}
 
 // ═══ JSON 파일에서 로드 (Google Sheets 미설정 시) ═══
 async function loadFromJSON(){
@@ -368,40 +399,40 @@ function rvDash(t){
 
   if(t.crossDims?.length){
     const totalSamples=ds.completed||1;
+    const targetMode=inferDimValueMode(t.crossDims,totalSamples,'target');
+    const actualMode=inferDimValueMode(t.crossDims,totalSamples,'actual');
     h+='<div class="section-title">횡단차원 매트릭스</div>';
     // Target vs Actual 비교 차트
     h+='<div class="dim-chart-wrap">';
     t.crossDims.forEach(d=>{
-      const actualCount=Math.round(d.actual*totalSamples/100);
-      const targetCount=Math.round(d.target*totalSamples/100);
-      const cls=d.actual===0?'actual-under':Math.abs(d.actual-d.target)<=3?'actual-ok':d.actual<d.target?'actual-under':'actual-over';
-      const maxPct=Math.max(d.target,d.actual,1);
+      const target=dimValue(d,totalSamples,'target',targetMode);
+      const actual=dimValue(d,totalSamples,'actual',actualMode);
+      const cls=actual.count===0?'actual-under':Math.abs(actual.pct-target.pct)<=3?'actual-ok':actual.pct<target.pct?'actual-under':'actual-over';
+      const maxPct=Math.max(target.pct,actual.pct,1);
       h+=`<div class="dim-chart-row"><span class="dim-chart-label">${d.name}</span><div class="dim-chart-bars">`;
-      h+=`<div class="dim-chart-bar-row"><span class="dim-chart-tag">목표</span><div class="dim-chart-bar-bg"><div class="dim-chart-bar target" style="width:${d.target/maxPct*100}%"></div></div><span class="dim-chart-val">${d.target}% (${targetCount}건)</span></div>`;
-      h+=`<div class="dim-chart-bar-row"><span class="dim-chart-tag">실제</span><div class="dim-chart-bar-bg"><div class="dim-chart-bar ${cls}" style="width:${d.actual/maxPct*100}%"></div></div><span class="dim-chart-val">${d.actual}% (${actualCount}건)</span></div>`;
+      h+=`<div class="dim-chart-bar-row"><span class="dim-chart-tag">목표</span><div class="dim-chart-bar-bg"><div class="dim-chart-bar target" style="width:${target.pct/maxPct*100}%"></div></div><span class="dim-chart-val">${target.pct}% (${num(target.count)}건)</span></div>`;
+      h+=`<div class="dim-chart-bar-row"><span class="dim-chart-tag">실제</span><div class="dim-chart-bar-bg"><div class="dim-chart-bar ${cls}" style="width:${actual.pct/maxPct*100}%"></div></div><span class="dim-chart-val">${actual.pct}% (${num(actual.count)}건)</span></div>`;
       h+=`</div></div>`;});
     h+='<div class="dim-chart-legend"><span style="color:#555">&#9632; 목표</span><span style="color:#4ecdc4">&#9632; 달성</span><span style="color:#ffd93d">&#9632; 미달</span><span style="color:#6c9fff">&#9632; 초과</span></div>';
     h+='</div>';
 
     // 턴 수 분포 차트
-    const allT=new Set();t.crossDims.forEach(d=>Object.keys(d.turnDist||{}).forEach(k=>allT.add(+k)));
-    const turns=[...allT].sort((a,b)=>a-b);
-    if(turns.length){
-      const maxV=Math.max(...t.crossDims.flatMap(d=>Object.values(d.turnDist||{})),1);
-      h+='<div class="chart-wrap"><div class="chart-title">횡단차원별 턴 수 분포 (X: 턴 수 / Y: 수량)</div>';
-      h+='<div class="chart-container">';
-      h+='<div class="chart-yaxis">';
-      for(let yi=4;yi>=0;yi--) h+=`<span>${Math.round(maxV*yi/4)}</span>`;
-      h+='</div>';
-      h+='<div class="chart">';
-      turns.forEach(tn=>{h+='<div class="chart-col"><div class="chart-group">';
-        t.crossDims.forEach((d,i)=>{const v=(d.turnDist||{})[String(tn)]||0;const hp=Math.max(Math.round(v/maxV*100),v?5:0);
-          h+=`<div class="chart-bar" style="height:${hp}%;background:${DIM_COLORS[i%DIM_COLORS.length]}" title="${d.name}: ${v}건"></div>`;});
-        h+=`</div><div class="chart-xlabel">${tn}턴</div></div>`;});
-      h+='</div></div>';
-      h+='<div class="chart-legend">';
-      t.crossDims.forEach((d,i)=>{const tot=Object.values(d.turnDist||{}).reduce((a,v)=>a+v,0);const pctOfTotal=totalSamples?Math.round(tot/totalSamples*100):0;
-        h+=`<span class="chart-legend-item"><span class="chart-legend-dot" style="background:${DIM_COLORS[i%DIM_COLORS.length]}"></span>${d.name} ${tot}건 (${pctOfTotal}%)</span>`;});
+    const hasTurnDist=t.crossDims.some(d=>Object.keys(d.turnDist||{}).length);
+    if(hasTurnDist){
+      h+='<div class="chart-wrap"><div class="chart-title">횡단차원별 턴 수 분포</div><div class="turn-small-grid">';
+      t.crossDims.forEach((d,i)=>{
+        const entries=Object.entries(d.turnDist||{}).map(([k,v])=>[+k,+v||0]).sort((a,b)=>a[0]-b[0]);
+        const tot=turnTotal(d), pctOfTotal=totalSamples?Math.round(tot/totalSamples*100):0;
+        const maxV=Math.max(...entries.map(([,v])=>v),1), color=DIM_COLORS[i%DIM_COLORS.length];
+        h+=`<div class="turn-card"><div class="turn-card-head"><span class="turn-card-title">${d.name}</span><span class="turn-card-total">${num(tot)}건 (${pctOfTotal}%)</span></div>`;
+        if(entries.length){
+          h+='<div class="turn-bars">';
+          entries.forEach(([tn,v])=>{const hp=Math.max(Math.round(v/maxV*100),v?4:0);
+            h+=`<div class="turn-col" title="${tn}턴: ${v}건"><div class="turn-bar" style="height:${hp}%;background:${color}"></div><div class="turn-label">${tn}</div></div>`;});
+          h+='</div>';
+        }else h+='<div class="turn-empty">턴 분포 없음</div>';
+        h+='</div>';
+      });
       h+='</div></div>';}}
 
   // 분포 차트
