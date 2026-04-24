@@ -221,14 +221,10 @@ function render(){const el=document.getElementById('ct');
 //  전체 요약
 // ══════════════════════════════════════
 function ovDash(){
-  const tgt=T.reduce((a,t)=>a+(t.info?.target||0),0),min=T.reduce((a,t)=>a+(t.info?.minimum||0),0),done=T.reduce((a,t)=>a+(t.dataStats?.completed||0),0);
-  const nD=T.filter(t=>t.status==='done').length,nW=T.filter(t=>t.status==='wip').length,nWt=T.filter(t=>t.status==='wait').length;
-  let h=`<div class="info"><span class="k">태스크</span><span class="val">${T.length}개</span><span class="sep"></span><span class="k">목표</span><span class="val">${nm(tgt)}</span><span class="sep"></span><span class="k">최소</span><span class="val">${nm(min)}</span><span class="sep"></span><span class="k">완료</span><span class="val">${nm(done)} (${pct(done,tgt)}%)</span><span class="sep"></span><span class="k">상태</span><span class="val">${nD}완료/${nW}진행/${nWt}대기</span></div>`;
-  h+=`<div class="cards"><div class="card"><div class="v">${nm(tgt)}</div><div class="l">전체 목표</div></div><div class="card"><div class="v">${nm(min)}</div><div class="l">전체 최소</div></div><div class="card"><div class="v">${nm(done)}</div><div class="l">현재 완료</div></div><div class="card"><div class="v">${pct(done,tgt)}%</div><div class="l">진행률</div></div></div>`;
-  h+='<div class="section">태스크 목록</div><div class="tg">';
+  let h='';
   T.forEach(t=>{const p=pct(t.dataStats?.completed||0,t.info?.target||1);
-    h+=`<div class="tc" onclick="nav('${t.id}')"><div class="tc-head"><span class="tc-id">${t.id} · Tier ${t.info?.tier||'?'}</span>${bg(t.status)}</div><div class="tc-name">${t.name}</div><div class="tc-desc">${t.desc}</div><div class="tc-stats"><span>목표 <span class="val">${nm(t.info?.target)}</span></span><span>최소 <span class="val">${nm(t.info?.minimum)}</span></span><span>완료 <span class="val">${nm(t.dataStats?.completed)}</span></span></div><div class="prog"><div class="prog-label"><span>${p}%</span><span>${nm(t.dataStats?.completed)}/${nm(t.info?.target)}</span></div><div class="prog-bar"><div class="prog-fill" style="width:${p}%;background:${pc(p)}"></div></div></div></div>`;});
-  return h+'</div>';}
+    h+=`<div class="tc" onclick="nav('${t.id}')" style="margin-bottom:10px"><div class="tc-head"><span class="tc-id">${t.id} · Tier ${t.info?.tier||'?'}</span>${bg(t.status)}</div><div class="tc-name">${t.name}</div><div class="prog"><div class="prog-label"><span>${p}% (${nm(t.dataStats?.completed)}/${nm(t.info?.target)})</span><span>최소 ${nm(t.info?.minimum)}</span></div><div class="prog-bar"><div class="prog-fill" style="width:${p}%;background:${pc(p)}"></div></div></div></div>`;});
+  return h;}
 
 function ovPipe(){
   let h='<div class="section">파이프라인 진행 현황</div><table class="tbl"><tr><th>태스크</th><th>Tier</th><th>상태</th><th>시드 구축</th><th>시드 검증</th><th>대화 생성</th><th>품질 검증</th></tr>';
